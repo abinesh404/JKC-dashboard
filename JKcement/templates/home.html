@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>JKC Dashboard - Interactive Flow</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Montserrat:wght@500;700;800&display=swap');
+
+        :root { 
+            --primary: #0F172A; 
+            --accent: #38BDF8; 
+            --nav: #1E293B; 
+            --bg: #F8FAFC; 
+        }
+
+        body, html { margin:0; padding:0; width:100%; height:100%; font-family:'Montserrat',sans-serif; background:var(--bg); overflow-x:hidden; transition: background 0.3s ease; }
+
+        .header-bar { 
+            width:100%; height:90px; background:#0F172A; display:flex; 
+            align-items:center; justify-content:space-between; padding:0; z-index:100; position:relative;
+        }
+        .main-title { 
+            color:var(--accent); font-family:'Orbitron',sans-serif; font-size:26px; 
+            font-weight:900; letter-spacing:2px; text-shadow:0 0 10px var(--accent); margin-left: 40px;
+        }
+        
+        .logo-shape-border {
+            height: 90px; width: 280px; background: var(--accent); 
+            clip-path: polygon(15% 0%, 100% 0%, 100% 100%, 0% 100%);
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .logo-container { 
+            height: calc(100% - 12px); width: calc(100% - 12px);
+            background: #FFFFFF; display: flex; align-items: center; justify-content: center; 
+            gap: 15px; padding-left: 30px; clip-path: polygon(15% 0%, 100% 0%, 100% 100%, 0% 100%);
+        }
+        .logo-img { max-height: 35px; max-width: 100px; object-fit: contain; }
+
+        .nav-tabs { width:100%; background:var(--nav); display:flex; z-index:90; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .tab { 
+            flex:1; text-align:center; padding:20px 5px; color:white; opacity:0.6; 
+            cursor:pointer; font-weight:800; font-size: 11px; transition:0.3s; 
+            border-right: 1px solid rgba(255,255,255,0.1); text-transform: uppercase;
+        }
+        .tab:hover { opacity: 1; background: rgba(255,255,255,0.05); }
+        .tab.active { background:white; color:var(--primary); opacity:1; border-bottom: 5px solid var(--accent); }
+
+        .container { padding:10px 0; height:calc(100vh - 160px); overflow-y:auto; }
+        .category-section { display:none; padding-bottom: 100px; }
+
+        .center-wrapper { position:relative; width:100%; height: 320px; display:flex; align-items:center; justify-content:center; flex-direction: column; }
+        
+        .expand-btn-container { width: 100%; height: 35px; display: flex; justify-content: center; align-items: center; position: absolute; top: 35px; }
+        .expand-btn { 
+            background:var(--accent); border:none; color:var(--primary); padding: 8px 20px; border-radius:4px; 
+            cursor:pointer; font-size:11px; font-weight:900; font-family:'Orbitron'; z-index: 50;
+        }
+
+        .center-orb-container { 
+            position: relative; width: 130px; height: 130px; display: flex; align-items: center; justify-content: center; z-index: 10; cursor: pointer; margin-top: 50px;
+            opacity: 0; transform: scale(0.5); transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .center-orb-container.animate-pop { opacity: 1; transform: scale(1); }
+
+        .inner-orb { width: 100%; height: 100%; border-radius: 50%; background: white; border: 5px solid var(--primary); display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 25px rgba(0,0,0,0.1); aspect-ratio: 1/1; }
+        .center-cat-name { color: var(--primary); font-weight: 800; font-size: 12px; text-align: center; text-transform: uppercase; width: 85%; line-height: 1.2; }
+        
+        .outer-glow-ring { position: absolute; width: 112%; height: 112%; border-radius: 50%; border: 2px solid var(--accent); opacity: 0.5; animation: orbPulse 3s infinite ease-in-out; }
+        @keyframes orbPulse { 0%, 100% { transform: scale(0.95); opacity: 0.3; } 50% { transform: scale(1.05); opacity: 0.7; box-shadow: 0 0 25px var(--accent); } }
+
+        .stat-badge { position: absolute; display: flex; flex-direction: column; align-items: center; top: 35%; opacity: 0; }
+        .left-badge { left: 15%; }
+        .right-badge { right: 15%; }
+
+        .cube-container { position: relative; width: 60px; height: 60px; margin-bottom: 8px; }
+        .cube-face { position: absolute; width: 100%; height: 100%; }
+        .front { background: var(--primary); clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); display: flex; align-items: center; justify-content: center; z-index: 3; }
+        .top { background: var(--primary); filter: brightness(1.5); clip-path: polygon(50% 0%, 100% 25%, 50% 50%, 0% 25%); transform: translateY(-25%); }
+        .side { background: var(--primary); filter: brightness(0.6); clip-path: polygon(0% 25%, 50% 50%, 50% 100%, 0% 75%); transform: translateX(-50%); }
+        .stat-value { font-family: 'Orbitron'; font-size: 18px; color: white; font-weight: 900; }
+        .stat-label { font-family: 'Orbitron'; font-size: 8px; color: var(--primary); font-weight: 800; letter-spacing: 1px; }
+
+        .lines-svg { width:100%; height: 80px; position: absolute; top: 240px; pointer-events: none; z-index: 1; display: none; }
+        .pulse-line { fill:none; stroke:var(--primary); stroke-width:2; stroke-dasharray:6; animation:dash 2s linear infinite; opacity:0.3; }
+        @keyframes dash { to { stroke-dashoffset:-24; } }
+
+        .sub-grid-container { display:none; width:100%; padding: 0 40px; box-sizing:border-box; gap: 15px; }
+        .sub-node { 
+            width:95px; height:95px; border-radius:50%; display:flex; align-items:center; justify-content:center; 
+            color:white; font-weight:800; cursor:pointer; text-align:center; padding:10px; font-size:10px; border: 3px solid #fff; 
+            background: radial-gradient(circle at 30% 30%, var(--accent) 0%, var(--primary) 90%); box-shadow: 0 5px 10px rgba(0,0,0,0.15); margin: 0 auto; 
+        }
+
+        .glass-card { margin-top:15px; display: none; }
+        .obj-item {
+            background: white; margin-bottom: 6px; display: flex; align-items: center; 
+            border-radius: 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); border-left: 4px solid var(--primary); 
+            min-height: 35px; transition: 0.2s;
+        }
+        .obj-item:hover { transform: translateX(5px); background: #f8fafc; }
+        .obj-text { flex: 1; padding: 6px 10px; font-size: 10px; color: #333; font-weight: 700; }
+        .obj-btn { background: var(--primary); color: var(--accent); padding: 0 12px; height: 35px; display: flex; align-items: center; font-family: 'Orbitron'; font-size: 10px; cursor: pointer; border: none; }
+
+        @keyframes slideInLeft {
+            from { transform: translateX(-200px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideInRight {
+            from { transform: translateX(200px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .animate-left { animation: slideInLeft 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+        .animate-right { animation: slideInRight 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+    </style>
+</head>
+<body>
+
+<div class="header-bar">
+    <div class="main-title">JKC DASHBOARD</div>
+    <div class="logo-shape-border">
+        <div class="logo-container">
+            <img src="{{ url_for('static', filename='JK-logo.png') }}" alt="JK Cement" class="logo-img">
+            <img src="{{ url_for('static', filename='ajalabs-logo.png') }}" alt="Aja Labs" class="logo-img">
+        </div>
+    </div>
+</div>
+
+<div class="nav-tabs" id="navTabs"></div>
+<div class="container" id="mainContainer"></div>
+
+<script>
+    const rawData = [
+        // (Full Data Array Kept Intact)
+        {id:"SJPR1", c:"SUPPLIER", s:"Procurement", o:"Delay in PR to PO"},
+        {id:"SJPR2", c:"SUPPLIER", s:"Procurement", o:"Open Purchase Order"},
+        {id:"SJPA3", c:"SUPPLIER", s:"Payment", o:"Change in firm name of stockist"},
+        {id:"SJPR4", c:"SUPPLIER", s:"Procurement", o:"Purchase Order with delivery address other than JKC global address list"},
+        {id:"SJPR5", c:"SUPPLIER", s:"Procurement", o:"Single source Vendor"},
+        {id:"SJMA6", c:"SUPPLIER", s:"Master Data", o:"Detect the Inactive vendors"},
+        {id:"SJPA7", c:"SUPPLIER", s:"Payment", o:"Penalty payment in MSME delay"},
+        {id:"SJPR8", c:"SUPPLIER", s:"Procurement", o:"Time gap between PO creation and GRN Date"},
+        {id:"SJPR9", c:"SUPPLIER", s:"Procurement", o:"Split Purchase Requisition"},
+        {id:"SJIN10", c:"SUPPLIER", s:"Invoice", o:"Mismatch Invoice and PO Vendor"},
+        {id:"SJIN11", c:"SUPPLIER", s:"Invoice", o:"Mismatch Invoice and PO Vendor - Part II"},
+        {id:"SJIN12", c:"SUPPLIER", s:"Invoice", o:"Processing Duplicate invoice (fraud)"},
+        {id:"SJIN13", c:"SUPPLIER", s:"Invoice", o:"Unplanned delivery cost > 5%"},
+        {id:"SJMA14", c:"SUPPLIER", s:"Master Data", o:"Vendor match employee / Foreign account"},
+        {id:"SJMA15", c:"SUPPLIER", s:"Master Data", o:"Dormant vendor accounts not blocked"},
+        {id:"SJMA16", c:"SUPPLIER", s:"Master Data", o:"Vendor name and customer name identical"},
+        {id:"SJMA17", c:"SUPPLIER", s:"Master Data", o:"Bank info changed before payout"},
+        {id:"SJMA18", c:"SUPPLIER", s:"Master Data", o:"Bank info changed - Part II"},
+        {id:"SJPA19", c:"SUPPLIER", s:"Payment", o:"Cheque/Wire not in Vendor name"},
+        {id:"SJMA20", c:"SUPPLIER", s:"Master Data", o:"Vendor to Vendor & Customer Transfers"},
+        {id:"SJPA21", c:"SUPPLIER", s:"Payment", o:"Bank Payments without Vendor & Customer"},
+        {id:"SJPA22", c:"SUPPLIER", s:"Payment", o:"Payment released without quality clearance"},
+        {id:"SJPA23", c:"SUPPLIER", s:"Payment", o:"Delayed & Early payments to vendors"},
+        {id:"SJPA24", c:"SUPPLIER", s:"Procurement", o:"Invoice Date prior to PO date"},
+        {id:"SJPR25", c:"SUPPLIER", s:"Procurement", o:"Invoice date prior to PO date - Part II"},
+        {id:"SJPR26", c:"SUPPLIER", s:"Procurement", o:"High Price PO - Min/Avg"},
+        {id:"SJPR27", c:"SUPPLIER", s:"Procurement", o:"High Price PO - Min/Avg Part II"},
+        {id:"SJPR28", c:"SUPPLIER", s:"Procurement", o:"PO vs Non PO transactions"},
+        {id:"SJIN29", c:"SUPPLIER", s:"Invoice", o:"Consumption booked after GRN date"},
+        {id:"SJIN30", c:"SUPPLIER", s:"Invoice", o:"GR based IV indicator inactive"},
+        {id:"SJIT31", c:"SUPPLIER", s:"ITAC", o:"Three way match failure"},
+        {id:"SJIN32", c:"SUPPLIER", s:"Invoice", o:"GR Based IV - Excess Qty cleared"},
+        {id:"SJIN33", c:"SUPPLIER", s:"Invoice", o:"GR Based IV - Excess IV Qty"},
+        {id:"SJIT34", c:"SUPPLIER", s:"ITAC", o:"Three way match failure #2"},
+        {id:"SJIT35", c:"SUPPLIER", s:"ITAC", o:"Three way match failure #3"},
+        {id:"SJIT36", c:"SUPPLIER", s:"ITAC", o:"Three way match failure #4"},
+        {id:"SJMA46", c:"SUPPLIER", s:"Master Data", o:"Duplicate Vendor"},
+        {id:"SJIN37", c:"SUPPLIER", s:"Invoice", o:"Duplicate Vendor Invoices_1"},
+        {id:"SJIN39", c:"SUPPLIER", s:"Invoice", o:"Incentive Scheme Claim Validation"},
+        {id:"SJIN40", c:"SUPPLIER", s:"Invoice", o:"Unplanned delivery cost validation"},
+        {id:"SJIN41", c:"SUPPLIER", s:"Invoice", o:"PO change after GRN"},
+        {id:"SJPA42", c:"SUPPLIER", s:"Payment", o:"Payment to Blocked invoices"},
+        {id:"SJMA43", c:"SUPPLIER", s:"Master Data", o:"Vendors with debit balances & ageing"},
+        {id:"SJMA44", c:"SUPPLIER", s:"Master Data", o:"One Time Vendor Account usage"},
+        {id:"SJMA45", c:"SUPPLIER", s:"Master Data", o:"Payment term variation"},
+        {id:"SJIN38", c:"SUPPLIER", s:"Invoice", o:"Duplicate Vendor Invoices_2"},
+        {id:"SJMA47", c:"SUPPLIER", s:"Master Data", o:"Excess payment with unadjusted advances"},
+        {id:"SJMA48", c:"SUPPLIER", s:"Master Data", o:"Blacklisted vendors"},
+        {id:"SJMA49", c:"SUPPLIER", s:"Master Data", o:"Duplicate vendor opposite balance"},
+        {id:"SJMA50", c:"SUPPLIER", s:"Master Data", o:"Vendor Employee Name/Address check"},
+        {id:"SJMA51", c:"SUPPLIER", s:"Master Data", o:"Vendor Foreign account"},
+        {id:"SJPA52", c:"SUPPLIER", s:"Payment", o:"Non Routine transactions"},
+        {id:"SJPR53", c:"SUPPLIER", s:"Procurement", o:"Same expenses PO & Non PO raised"},
+        {id:"SJPR54", c:"SUPPLIER", s:"Procurement", o:"Same group PO & Non PO Invoices"},
+        {id:"SJPR55", c:"SUPPLIER", s:"Procurement", o:"Same GL group PO & Non PO Invoices"},
+
+        {id:"CJIN1", c:"CUSTOMER", s:"Invoice", o:"Invoice Series discrepancies"},
+        {id:"CJIN2", c:"CUSTOMER", s:"Invoice", o:"Anamolies to CR Note"},
+        {id:"CJIT3", c:"CUSTOMER", s:"ITAC", o:"Credit sales exceeding limit"},
+        {id:"CJIT4", c:"CUSTOMER", s:"ITAC", o:"Credit note > invoice value"},
+        {id:"CJIT5", c:"CUSTOMER", s:"ITAC", o:"Delivery excess to SO tolerance"},
+        {id:"CJMA6", c:"CUSTOMER", s:"Master Data", o:"Updates in Recon Account pending"},
+        {id:"CJIT7", c:"CUSTOMER", s:"ITAC", o:"Manual price entry"},
+        {id:"CJIT8", c:"CUSTOMER", s:"ITAC", o:"Price change before SO"},
+        {id:"CJIT9", c:"CUSTOMER", s:"ITAC", o:"Price change after SO"},
+        {id:"CJMA10", c:"CUSTOMER", s:"Master Data", o:"Duplicate Customer Masters"},
+        {id:"CJMA11", c:"CUSTOMER", s:"Master Data", o:"Payment term issues"},
+        {id:"CJMA12", c:"CUSTOMER", s:"Master Data", o:"Adverse payment terms in invoice"},
+        {id:"CJMA13", c:"CUSTOMER", s:"Master Data", o:"Key fields missing in master"},
+        {id:"CJMA14", c:"CUSTOMER", s:"Master Data", o:"Customer To vendor setoff"},
+        {id:"CJMA15", c:"CUSTOMER", s:"Master Data", o:"Vendor To Customer setoff"},
+        {id:"CJMA16", c:"CUSTOMER", s:"Master Data", o:"No Updates in Customer Account #1"},
+        {id:"CJMA17", c:"CUSTOMER", s:"Master Data", o:"No Updates in Customer Account #2"},
+        {id:"CJMA18", c:"CUSTOMER", s:"Master Data", o:"Updates don't match record"},
+        {id:"CJMA19", c:"CUSTOMER", s:"Master Data", o:"Unblocked duplicate customers"},
+        {id:"CJSA21", c:"CUSTOMER", s:"Sales", o:"Sale price verification"},
+        {id:"CJSA22", c:"CUSTOMER", s:"Sales", o:"Goods at Free of Cost"},
+        {id:"CJSA23", c:"CUSTOMER", s:"Sales", o:"Return Qty > Sales Qty"},
+        {id:"CJSA24", c:"CUSTOMER", s:"Sales", o:"LR and Invoice date timeline"},
+        {id:"CJSA25", c:"CUSTOMER", s:"Sales", o:"Delivery tolerance (Qty/Trans)"},
+        {id:"CJSA26", c:"CUSTOMER", s:"Sales", o:"Sales return quantity variance"},
+        {id:"CJSA27", c:"CUSTOMER", s:"Sales", o:"Sales return variance for sold party"},
+        {id:"CJSA28", c:"CUSTOMER", s:"Sales", o:"Manual Intervention"},
+        {id:"CJSA29", c:"CUSTOMER", s:"Sales", o:"Pending Processing"},
+        {id:"CJSA30", c:"CUSTOMER", s:"Sales", o:"Sales Return inaccurate price"},
+
+        {id:"FJAC1", c:"FINANCE", s:"Accounting", o:"Direct Expense Payment"},
+        {id:"FJAC2", c:"FINANCE", s:"Accounting", o:"Vendor Customer Reverse Booking"},
+        {id:"FJAC3", c:"FINANCE", s:"Accounting", o:"Vendor recon account not defined"},
+        {id:"FJAC4", c:"FINANCE", s:"Accounting", o:"Entries in Prior Reporting Period"},
+        {id:"FJAC5", c:"FINANCE", s:"Accounting", o:"Revenue Recognition Exceptions"},
+        {id:"FJAC6", c:"FINANCE", s:"Accounting", o:"Missing/Backdated Invoicing"},
+        {id:"FJAC7", c:"FINANCE", s:"Accounting", o:"Customer/Vendor transfers"},
+        {id:"FJAC8", c:"FINANCE", s:"Accounting", o:"Non usage accounts"},
+        {id:"FJAC9", c:"FINANCE", s:"Accounting", o:"GL Processing"},
+        {id:"FJAC10", c:"FINANCE", s:"Accounting", o:"PY processed in CY with Ageing"},
+        {id:"FJAC11", c:"FINANCE", s:"Accounting", o:"WBS code difference"},
+        {id:"FJAC12", c:"FINANCE", s:"Accounting", o:"Unauthorised MIRO entries"},
+        {id:"FJIT13", c:"FINANCE", s:"ITAC", o:"Payment without advance adjust"},
+        {id:"FJIT14", c:"FINANCE", s:"ITAC", o:"PO Quantity > PR Quantity"},
+        {id:"FJIT15", c:"FINANCE", s:"ITAC", o:"PO qty > PR qty - Part II"},
+        {id:"FJPA16", c:"FINANCE", s:"Payment", o:"Excessive Bank Charges"},
+        {id:"FJAC17", c:"FINANCE", s:"Accounting", o:"Statistical Model: Vouchers"},
+        {id:"FJAC18", c:"FINANCE", s:"Accounting", o:"Statistical Model: Expense"},
+        {id:"FJSP19", c:"FINANCE", s:"Spend Analysis", o:"Spend analysis_Overall"},
+        {id:"FJSP20", c:"FINANCE", s:"Spend Analysis", o:"Spend analysis_Direct expenses"},
+        {id:"FJSP21", c:"FINANCE", s:"Spend Analysis", o:"Spend analysis_Freight"},
+        {id:"FJAC22", c:"FINANCE", s:"Accounting", o:"Duplicate payments (Ref/Value)"},
+
+        {id:"MJPR1", c:"MANUFACTURING", s:"Production", o:"Inventory Valuation (<=0 stock)"},
+        {id:"MJIM2", c:"MANUFACTURING", s:"Inventory Movement", o:"Idle Inventory Ageing"},
+        {id:"MJIM3", c:"MANUFACTURING", s:"Inventory Movement", o:"Lack of QA Testing"},
+        {id:"MJIT4", c:"MANUFACTURING", s:"ITAC", o:"Validity period config check"},
+        {id:"MJMA5", c:"MANUFACTURING", s:"Manufacturing Efficiency", o:"Missing Expiry Date"},
+        {id:"MJOT06", c:"MANUFACTURING", s:"Others", o:"Actual vs Std Yield Loss"},
+        {id:"MJPR7", c:"MANUFACTURING", s:"Production", o:"Shelf life difference"},
+        {id:"MJPR8", c:"MANUFACTURING", s:"Production", o:"Low shelf life receipt"},
+        {id:"MJPR9", c:"MANUFACTURING", s:"Production", o:"Low Shelf Life alert"},
+        {id:"MJIM10", c:"MANUFACTURING", s:"Inventory Movement", o:"QA testing"},
+        {id:"MJOT11", c:"MANUFACTURING", s:"Others", o:"Scrap Sales"},
+
+        {id:"PJSO1", c:"PAYROLL", s:"SoD", o:"SoD Check Category 1"},
+        {id:"PJSO2", c:"PAYROLL", s:"SoD", o:"SoD Check Category 2"},
+        {id:"PJSO3", c:"PAYROLL", s:"SoD", o:"SoD Check Category 3"},
+        {id:"PJSO4", c:"PAYROLL", s:"SoD", o:"SoD Check Category 4"},
+        {id:"PJMA5", c:"PAYROLL", s:"Master Data", o:"Register and GL discrepancies"},
+        {id:"PJMA6", c:"PAYROLL", s:"Master Data", o:"Ghost employee identification"},
+        {id:"PJPA7", c:"PAYROLL", s:"Payment", o:"Excess commission paid"},
+        {id:"PJPA8", c:"PAYROLL", s:"Payment", o:"Loans written off"},
+        {id:"PJPA9", c:"PAYROLL", s:"Payment", o:"Employee expense reimbursement"},
+        {id:"PJPA10", c:"PAYROLL", s:"Payment", o:"Junior claim bypass manager"},
+        {id:"PJTE11", c:"PAYROLL", s:"Termination", o:"Relieved Employee debit balance"},
+        {id:"PJTE12", c:"PAYROLL", s:"Termination", o:"Relieved Employee SAP Access"},
+        {id:"PJPA13", c:"PAYROLL", s:"Payment", o:"Policy Validation of Expenses claimed as reimbursement"},
+        {id:"PJPA14", c:"PAYROLL", s:"Payment", o:"Duplicate Claim by Same Employee"},
+        {id:"PJPA16", c:"PAYROLL", s:"Payment", o:"Duplicate Employee with different Employee ID"},
+        {id:"PJPA18", c:"PAYROLL", s:"Payment", o:"Multiple Submits for Same Travel"},
+        {id:"PJPA19", c:"PAYROLL", s:"Payment", o:"Multiple Travel Modes claimed under same Report/Trip"},
+        {id:"PJPA20", c:"PAYROLL", s:"Payment", o:"Odd Time Submission (8PM-8AM)"},
+        {id:"PJPA21", c:"PAYROLL", s:"Payment", o:"Overlapping Travel across different trips/Reports"},
+        {id:"PJPA22", c:"PAYROLL", s:"Payment", o:"Same claim, multiple employees"},
+        {id:"PJPA23", c:"PAYROLL", s:"Payment", o:"Submit Date before Report Start date"},
+        {id:"PJPA24", c:"PAYROLL", s:"Payment", o:"Statistical Model on Employee Submission Data"},
+        {id:"PJPA26", c:"PAYROLL", s:"Payment", o:"Variance Analysis for same and across Levels"},
+        {id:"PJPA27", c:"PAYROLL", s:"Payment", o:"Notice Period Spending Spree"},
+        {id:"PJPA29", c:"PAYROLL", s:"Payment", o:"New Joiner Early Claims"},
+        {id:"PJPA30", c:"PAYROLL", s:"Payment", o:"Short Trip Frequency Abuse"},
+        {id:"PJPA31", c:"PAYROLL", s:"Payment", o:"Detect multiple claims on adjacent days"},
+        {id:"PJPA32", c:"PAYROLL", s:"Payment", o:"Weekend or Holiday Travel"},
+        {id:"PJPA33", c:"PAYROLL", s:"Payment", o:"Receipt hoarding and batch submission"},
+        {id:"PJPA34", c:"PAYROLL", s:"Payment", o:"High-Frequency Low Value Claims"},
+        {id:"PJPA35", c:"PAYROLL", s:"Payment", o:"Duplicate Report ID"},
+        {id:"PJPA36", c:"PAYROLL", s:"Payment", o:"EDA on Employee Reimbursement Claims"},
+        {id:"PJPA37", c:"PAYROLL", s:"Payment", o:"Machine Learning Model on T&E Expense"},
+        {id:"PJPA38", c:"PAYROLL", s:"Payment", o:"Odd Travel Modes (5%)"},
+        {id:"PJPA39", c:"PAYROLL", s:"Payment", o:"Multiple Employee Status for Employees"},
+        {id:"PJPA40", c:"PAYROLL", s:"Payment", o:"Transaction Date - Report Start/End Date Issues"},
+
+        {id:"IJSA1", c:"IT CONTROLS", s:"SAP", o:"Vendor Creation"},
+        {id:"IJIT2", c:"IT CONTROLS", s:"ITAC", o:"Tolerance limit changes"},
+        {id:"IJSA3", c:"IT CONTROLS", s:"SAP", o:"Critical tcode access"},
+        {id:"IJSA4", c:"IT CONTROLS", s:"SAP", o:"Client set to modifiable"},
+        {id:"IJSA5", c:"IT CONTROLS", s:"SAP", o:"Direct changes to SAP #1"},
+        {id:"IJSA6", c:"IT CONTROLS", s:"SAP", o:"Direct changes to SAP #2"},
+        {id:"IJSA7", c:"IT CONTROLS", s:"SAP", o:"Configuration of Document Type"},
+
+        {id:"TJGS1", c:"TAXATION", s:"GST", o:"Payment > 180 days from Invoice"},
+        {id:"TJGS2", c:"TAXATION", s:"GST", o:"GST Query Analysis"},
+        {id:"TJGS3", c:"TAXATION", s:"GST", o:"GST interest loss"},
+        {id:"TJGS4", c:"TAXATION", s:"GST", o:"Duplicate GST invoices"},
+        {id:"TJMA5", c:"TAXATION", s:"Master Data", o:"Customer recon account undefined"},
+
+        {id:"FJCA23", c:"FIXED ASSET", s:"Capitalization", o:"Delay in capitalisation date"},
+        {id:"FJIT24", c:"FIXED ASSET", s:"ITAC", o:"Asset Masters vs Entry date"},
+        {id:"FJDE25", c:"FIXED ASSET", s:"Depreciation", o:"Gap in Cap & Dep date"},
+        {id:"FJMA26", c:"FIXED ASSET", s:"Master Data", o:"Useful life changes"},
+        {id:"FJDE27", c:"FIXED ASSET", s:"Depreciation", o:"Negative book value"},
+        {id:"FJDE28", c:"FIXED ASSET", s:"Depreciation", o:"No depreciation (Salvage >5%)"}
+    ];
+
+    const themes = {
+        'SUPPLIER':      { p: '#0F172A', a: '#38BDF8', n: '#1E293B', b: '#F8FAFC' }, 
+        'CUSTOMER':      { p: '#1B5E20', a: '#4CAF50', n: '#0D3311', b: '#E8F5E9' }, 
+        'IT_CONTROLS':   { p: '#2D3436', a: '#00CEC9', n: '#1A1A1A', b: '#F1F2F6' },
+        'FINANCE':       { p: '#3C332A', a: '#D4AF37', n: '#26211B', b: '#FFFCF5' }, 
+        'MANUFACTURING': { p: '#2C3E50', a: '#E74C3C', n: '#1A252F', b: '#FDEDEC' }, 
+        'PAYROLL':       { p: '#31004A', a: '#D000FF', n: '#1F0030', b: '#FAF5FF' }, 
+        'TAXATION':      { p: '#000000', a: '#CCFF00', n: '#1A1A1A', b: '#FCFFFA' },
+        'FIXED_ASSET':   { p: '#1A1A1A', a: '#FF8C00', n: '#000000', b: '#FFF9F2' }  
+    };
+
+    const catOrder = ["SUPPLIER", "CUSTOMER", "IT CONTROLS", "FINANCE", "MANUFACTURING", "PAYROLL", "TAXATION", "FIXED ASSET"];
+    // REPLACE ONLY THE init() function inside your <script> tag with this:
+
+function init() {
+    const nav = document.getElementById('navTabs');
+    const main = document.getElementById('mainContainer');
+
+    catOrder.forEach((catName, i) => {
+        const cleanId = catName.replace(/\s+/g, '_');
+        const catRows = rawData.filter(d => d.c === catName);
+        const subs = [...new Set(catRows.map(d => d.s))];
+
+        const tab = document.createElement('div');
+        tab.className = `tab ${i === 0 ? 'active' : ''}`;
+        tab.id = `tab_${cleanId}`;
+        tab.innerText = catName;
+        tab.onclick = () => switchTab(cleanId);
+        nav.appendChild(tab);
+
+        const section = document.createElement('div');
+        section.className = 'category-section';
+        section.id = cleanId;
+        if(i === 0) section.style.display = 'block';
+
+        let lines = "";
+        subs.forEach((_, idx) => {
+            let xPos = (100 / subs.length) * (idx + 0.5);
+            lines += `<path class="pulse-line" d="M 50 10 L 50 40 L ${xPos} 40 L ${xPos} 90" />`;
+        });
+
+        const subGridHtml = subs.map(subName => {
+            const subId = (cleanId + "_" + subName).replace(/\s+/g, '_');
+            const items = catRows.filter(d => d.s === subName);
+            
+            // 1. Matches FOLDER names exactly (e.g., Supplier, Customer, Fixed_Asset)
+            let catPath = catName.charAt(0) + catName.slice(1).toLowerCase().replace(/\s+/g, '_');
+            if(catName === "IT CONTROLS") catPath = "ITcontrols";
+            if(catName === "FIXED ASSET") catPath = "Fixed_Asset";
+            if(catName === "SUPPLIER") catPath = "Supplier"; // Ensure Capital S
+            if(catName === "CUSTOMER") catPath = "Customer";
+            
+            let subPath = subName.toLowerCase().replace(/\s+/g, '_'); 
+
+             
+            const objectiveListHtml = items.map(it => {
+               const url = `/${catPath}/${subPath}/?oid=${it.id}`;
+               return `<div class="obj-item">
+               <div class="obj-text">${it.o}</div>
+               <div class="obj-btn" onclick="window.location.href='${url}'">»»</div>
+               </div>`;
+            }).join('');
+
+            return `
+                <div class="sub-col">
+                    <div class="sub-node" onclick="toggleObjectives('${subId}')">${subName} (${items.length})</div>
+                    <div class="glass-card" id="${subId}">${objectiveListHtml}</div>
+                </div>`;
+        }).join('');
+
+        section.innerHTML = `
+            <div class="center-wrapper">
+                <div class="expand-btn-container">
+                    <button class="expand-btn" id="btn_${cleanId}" onclick="toggleExpandAll('${cleanId}')">EXPAND ALL</button>
+                </div>
+                <div class="stat-badge left-badge">
+                    <div class="cube-container">
+                        <div class="cube-face top"></div><div class="cube-face side"></div>
+                        <div class="cube-face front"><span class="stat-value">${catRows.length}</span></div>
+                    </div>
+                    <div class="stat-label">OBJECTIVES</div>
+                </div>
+                <div class="center-orb-container" onclick="toggleSubCategories('${cleanId}')">
+                    <div class="outer-glow-ring"></div>
+                    <div class="inner-orb"><span class="center-cat-name">${catName}</span></div>
+                </div>
+                <div class="stat-badge right-badge">
+                    <div class="cube-container">
+                        <div class="cube-face top"></div><div class="cube-face side"></div>
+                        <div class="cube-face front"><span class="stat-value">${subs.length}</span></div>
+                    </div>
+                    <div class="stat-label">SUB-CATEGORIES</div>
+                </div>
+                <svg id="lines_${cleanId}" class="lines-svg" viewBox="0 0 100 100" preserveAspectRatio="none">${lines}</svg>
+            </div>
+            <div class="sub-grid-container" id="grid_${cleanId}" style="grid-template-columns: repeat(${subs.length}, 1fr);">
+                ${subGridHtml}
+            </div>
+        `;
+        main.appendChild(section);
+    });
+    setTimeout(() => triggerAnimations('SUPPLIER'), 100);
+}
+    function triggerAnimations(id) {
+        const section = document.getElementById(id);
+        if(!section) return;
+        const left = section.querySelector('.left-badge');
+        const right = section.querySelector('.right-badge');
+        const orb = section.querySelector('.center-orb-container');
+        left.classList.remove('animate-left');
+        right.classList.remove('animate-right');
+        orb.classList.remove('animate-pop');
+        void left.offsetWidth; 
+        left.classList.add('animate-left');
+        right.classList.add('animate-right');
+        orb.classList.add('animate-pop');
+    }
+
+    function switchTab(id) {
+        document.querySelectorAll('.category-section').forEach(s => s.style.display = 'none');
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        const targetSection = document.getElementById(id);
+        if (targetSection) {
+            targetSection.style.display = 'block';
+            triggerAnimations(id);
+        }
+        const activeTab = document.getElementById('tab_' + id);
+        if (activeTab) activeTab.classList.add('active');
+        const theme = themes[id] || themes['SUPPLIER'];
+        document.documentElement.style.setProperty('--primary', theme.p);
+        document.documentElement.style.setProperty('--accent', theme.a);
+        document.documentElement.style.setProperty('--nav', theme.n);
+        document.documentElement.style.setProperty('--bg', theme.b);
+    }
+
+    function toggleSubCategories(catId) {
+        const grid = document.getElementById('grid_' + catId);
+        const lines = document.getElementById('lines_' + catId);
+        if (!grid) return;
+        const isHidden = grid.style.display === 'none' || grid.style.display === '';
+        grid.style.display = isHidden ? 'grid' : 'none';
+        if (lines) lines.style.display = isHidden ? 'block' : 'none';
+    }
+
+    function toggleObjectives(subId) {
+        const el = document.getElementById(subId);
+        if (el) el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+    }
+
+    function toggleExpandAll(catId) {
+        const grid = document.getElementById('grid_' + catId);
+        const lines = document.getElementById('lines_' + catId);
+        const btn = document.getElementById('btn_' + catId);
+        const section = document.getElementById(catId);
+        if (!section) return;
+        const cards = section.querySelectorAll('.glass-card');
+        if (btn.innerText === "EXPAND ALL") {
+            if (grid) grid.style.display = 'grid';
+            if (lines) lines.style.display = 'block';
+            cards.forEach(c => c.style.display = 'block');
+            btn.innerText = "CLEAR ALL";
+        } else {
+            if (grid) grid.style.display = 'none';
+            if (lines) lines.style.display = 'none';
+            cards.forEach(c => c.style.display = 'none');
+            btn.innerText = "EXPAND ALL";
+        }
+    }
+
+    window.onload = init;
+</script>
+</body>
+</html>

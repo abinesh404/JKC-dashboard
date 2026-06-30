@@ -1,0 +1,9 @@
+# Ignore everything by default
+*
+
+# Allow the gitignore itself
+!.gitignore
+
+# Allow the JKcement directory and all its contents
+!/JKcement/
+!/JKcement/**

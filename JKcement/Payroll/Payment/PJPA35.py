@@ -17,26 +17,13 @@ CONFIG = {
         "report": ["Report ID","Trip Number","Expense Type","Travel Mode"],
         "department": ["Department","Cost Center","Manager Name"]
     },
-            "cards": [
-        {"id": "k1", "label": "Companies", "agg": "unique", "source": "company"},
-        {"id": "k2", "label": "Employees", "agg": "unique", "source": "employee"},
-        {"id": "k3", "label": "Records", "agg": "total_rows"},
-        {"id": "k4", "label": "Total Value", "agg": "total_value", "source": "amount", "format": "currency"},
-        {"id": "k5", "label": "Departments", "agg": "unique", "source": "department"},
-        {"id": "k6", "label": "Issue Count", "agg": "row_count"}
-    ],
+            "cards": [{'id': 'k1', 'label': 'Duplicate Report Value', 'agg': 'total_value', 'source': 'amount', 'format': 'currency'}, {'id': 'k2', 'label': 'Duplicate Claimants', 'agg': 'unique', 'source': 'employee'}, {'id': 'k3', 'label': 'Duplicate Report Count', 'agg': 'total_rows'}, {'id': 'k4', 'label': 'Affected Cost Centers', 'agg': 'unique', 'source': 'department'}],
     "filters": [
         {"id": "f1", "label": "Companies", "source": "company"},
         {"id": "f2", "label": "Employees", "source": "employee"},
         {"id": "f3", "label": "Departments", "source": "department"}
     ],
-    "charts": [
-        {"id": "c1", "type": "pie", "x": "employee", "y": "amount", "agg": "sum", "top_n": 5, "title": get_chart_title("Employee", "Amount", top_n=5)},
-        {"id": "c2", "type": "bar", "x": "company", "agg": "count", "top_n": 10, "horizontal": True, "title": get_chart_title("Company", "Count", top_n=10)},
-        {"id": "c3", "type": "line", "x": "date", "y": "amount", "agg": "sum", "time_group": "month", "title": get_chart_title("Month", "Amount")},
-        {"id": "c4", "type": "doughnut", "x": "department", "agg": "count", "title": get_chart_title("Department")},
-        {"id": "c5", "type": "bar", "x": "department", "y": "amount", "agg": "sum", "top_n": 10, "title": get_chart_title("Department", "Amount", top_n=10)}
-    ]
+    "charts": [{'id': 'c1', 'type': 'bar', 'x': 'department', 'y': 'amount', 'agg': 'sum', 'title': 'DUPLICATE REPORT VALUE BY DEPARTMENT'}, {'id': 'c2', 'type': 'doughnut', 'x': 'company', 'agg': 'count', 'title': 'DUPLICATES BY COMPANY AREA'}, {'id': 'c3', 'type': 'line', 'x': 'date', 'y': 'amount', 'agg': 'sum', 'time_group': 'month', 'title': 'DUPLICATE REPORT TREND'}]
 }
 
 def meta():
@@ -44,7 +31,7 @@ def meta():
 
 def get_data(exc_id):
     paths = [
-        rf"D:\off\JKC Dashboard\output\PJPA35_Exception{int(exc_id):02}.csv"
+        rf"data_files/PJPA35_Exception{int(exc_id):02}.csv"
     ]
     path = next((p for p in paths if os.path.exists(p)), None)
     if path:

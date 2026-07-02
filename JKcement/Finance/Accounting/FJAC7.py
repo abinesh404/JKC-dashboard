@@ -12,10 +12,10 @@ CONFIG = {
     "name": "Customer to customer & customer to Vendor transfer",
     "active_exceptions": [
         {"id": "1", "label": "Exception 01", "title": get_exception_title("Exception 01")},
-        {"id": "2", "label": "Exception 02", "title": get_exception_title("Exception 02")},
-        {"id": "3", "label": "Exception 03", "title": get_exception_title("Exception 03")}
+        {"id": "2", "label": "Exception 02", "title": get_exception_title("Exception 02")}
     ],
     "columns": {
+        "exception_type": ["Exception Type"],
         "amount":   ["Amount in Local Currency", "Amount in Document Currency", "Amount", "DMBTR", "WRBTR"],
         "vendor":   ["Vendor Name", "Customer Name", "Name 1", "Vendor", "Customer", "Account"],
         "date":     ["Posting Date in the Document", "Posting Date", "Document Date", "BUDAT", "BLDAT"],
@@ -33,6 +33,7 @@ CONFIG = {
         {"id": "k6", "label": "Issue Count", "agg": "row_count"}
     ],
     "filters": [
+                {"id": "f_extype", "label": "Exception Type", "source": "exception_type"},
         {"id": "f1", "label": "Companies", "source": "company"},
         {"id": "f2", "label": "Vendors", "source": "vendor"},
         {"id": "f3", "label": "GL Accounts", "source": "gl"}
@@ -51,7 +52,8 @@ def meta():
 
 def get_data(exc_id):
     paths = [
-        rf"D:\off\JKC Dashboard\output\FJAC7_Exception{int(exc_id):02}.csv"
+        rf"data_files/FJAC7_Exception{int(exc_id):02}.csv",
+        rf"data_files/FJAC7_Exception{int(exc_id)}.csv"
     ]
     path = next((p for p in paths if os.path.exists(p)), None)
     if path:

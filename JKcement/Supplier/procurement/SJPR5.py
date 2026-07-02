@@ -13,100 +13,10 @@ CONFIG = {
     "id": "SJPR5",
     "name": "Single Source Vendors",
     "active_exceptions": [
-        {
-            "id": "1",
-            "label": "Exception 01",
-            "title": get_exception_title("Single Source Vendor – Plant Level"),
-            "cards": [
-                {
-                    "id": "k1",
-                    "label": "Companies",
-                    "agg": "unique",
-                    "source": "company"
-                },
-                {
-                    "id": "k2",
-                    "label": "Plants",
-                    "agg": "unique",
-                    "source": "plant"
-                },
-                {
-                    "id": "k3",
-                    "label": "Vendors",
-                    "agg": "unique",
-                    "source": "vendor"
-                },
-                {
-                    "id": "k4",
-                    "label": "Materials",
-                    "agg": "unique",
-                    "source": "material"
-                },
-                {
-                    "id": "k5",
-                    "label": "Purchase Orders",
-                    "agg": "unique",
-                    "source": "po"
-                },
-                {
-                    "id": "k6",
-                    "label": "Total Procurement Value",
-                    "agg": "total_value",
-                    "source": "amount",
-                    "format": "currency"
-                }
-            ],
-            "filters": [
-                {"id": "f1", "label": "Company", "source": "company"},
-                {"id": "f2", "label": "Plant", "source": "plant"},
-                {"id": "f3", "label": "Vendor", "source": "vendor"}
-            ],
-            "charts": [
-                {
-                    "id": "c1",
-                    "type": "pie",
-                    "x": "vendor",
-                    "y": "amount",
-                    "agg": "sum",
-                    "top_n": 5,
-                    "title": "Top 5 Vendors by Procurement Value"
-                },
-                {
-                    "id": "c2",
-                    "type": "bar",
-                    "x": "plant_name",
-                    "agg": "count",
-                    "top_n": 10,
-                    "horizontal": True,
-                    "title": "Top 10 Plants with Single Source Vendors"
-                },
-                {
-                    "id": "c3",
-                    "type": "line",
-                    "x": "date",
-                    "agg": "count",
-                    "time_group": "month",
-                    "title": "Monthly Single Source Vendor Trend"
-                },
-                {
-                    "id": "c4",
-                    "type": "doughnut",
-                    "x": "company_name",
-                    "agg": "count",
-                    "title": "Company-wise Single Source Vendor Share"
-                },
-                {
-                    "id": "c5",
-                    "type": "bar",
-                    "x": "material_group",
-                    "agg": "count",
-                    "top_n": 10,
-                    "title": "Material Groups with Single Source Dependency"
-                }
-            ]
-        }
+        {"id": "1", "label": "Exception 01", "title": get_exception_title("Exception 01")}
     ],
     "columns": {
+        "exception_type": ["Exception Type"],
         "company": [
             "Company Code",
             "Company Name",
@@ -166,10 +76,10 @@ def meta():
 
 def get_data(exc_id):
     paths = [
-        f"data_files/SJPR5_Exception0{exc_id}.csv",
-        f"data_files/SJPR5_Exception{exc_id}.csv"
+        rf"data_files/SJPR5_Exception{int(exc_id):02}.csv",
+        rf"data_files/SJPR5_Exception{int(exc_id)}.csv"
     ]
     path = next((p for p in paths if os.path.exists(p)), None)
-    if not path:
-        return None
-    return pd.read_csv(path, encoding='latin1', low_memory=False).fillna('')
+    if path:
+        return pd.read_csv(path, encoding='latin1', low_memory=False).fillna('')
+    return None

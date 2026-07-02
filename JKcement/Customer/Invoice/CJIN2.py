@@ -24,54 +24,11 @@ CONFIG = {
     "name": "Anomalies to CR Note",
 
     "active_exceptions": [
-
-        {
-            "id": "1",
-
-            "label": "Exception 01",
-
-            "title": get_exception_title("Anomalies to CR Note"),
-
-            "cards": [
-
-                {"id": "k1", "label": "Total Anomalies", "agg": "row_count"},
-
-                {"id": "k2", "label": "Total Net Value", "agg": "total_value", "source": "net_value", "format": "currency"},
-
-                {"id": "k3", "label": "Company Count", "agg": "unique", "source": "doctype"},
-
-                {"id": "k4", "label": "Unique Mat Types", "agg": "unique", "source": "mattype"},
-
-                {"id": "k5", "label": "Target Qty Total", "agg": "sum", "source": "targetqty"},
-
-                {"id": "k6", "label": "Test Case Count", "agg": "unique", "source": "testcase"}
-            ],
-
-            "filters": [
-
-                {"id": "f1", "label": "Doc Type", "source": "doctype"},
-
-                {"id": "f2", "label": "Description", "source": "desc"},
-
-                {"id": "f3", "label": "Test Case", "source": "testcase"}
-            ],
-
-            "charts": [
-
-                {"id": "c1", "type": "pie", "x": "mattype", "agg": "count", "top_n": 5, "title": get_chart_title("Mat Type Share")},
-
-                {"id": "c2", "type": "bar", "x": "material", "y": "net_value", "agg": "sum", "top_n": 10, "horizontal": True, "title": get_chart_title("Top 10 Materials", "Net Value")},
-
-                {"id": "c3", "type": "line", "x": "date", "agg": "count", "time_group": "month", "title": get_chart_title("Monthly Anomaly Trend")},
-
-                {"id": "c4", "type": "doughnut", "x": "doctype", "y": "net_value", "agg": "sum", "title": get_chart_title("Doc Type Share", "Net Value")},
-
-                {"id": "c5", "type": "bar", "x": "testcase", "agg": "count", "top_n": 10, "title": get_chart_title("Top Test Cases")}
-            ]
-        }
+        {"id": "1", "label": "Exception 01", "title": get_exception_title("Exception 01")}
     ],
 
     "columns": {
+        "exception_type": ["Exception Type"],
 
         "material": ["Material"],
 
@@ -103,16 +60,11 @@ def meta():
 
 
 def get_data(exc_id):
-
-    path = rf"D:\off\JKC Dashboard\output\CJIN02_Exception{int(exc_id):02}.csv"
-
-    if not os.path.exists(path):
-
-        return None
-
-    return pd.read_csv(
-        path,
-        encoding='latin1',
-        low_memory=False
-    ).fillna('')
-
+    paths = [
+        rf"data_files/CJIN2_Exception{int(exc_id):02}.csv",
+        rf"data_files/CJIN2_Exception{int(exc_id)}.csv"
+    ]
+    path = next((p for p in paths if os.path.exists(p)), None)
+    if path:
+        return pd.read_csv(path, encoding='latin1', low_memory=False).fillna('')
+    return None

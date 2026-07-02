@@ -16,11 +16,9 @@ CONFIG = {
     "id": "FJSP19",
     "name": "Spend analysis_Overall",
     "active_exceptions": [
-        {"id": "1", "label": "Exception 01", "title": get_exception_title("Exception 01")},
-        {"id": "2", "label": "Exception 02", "title": get_exception_title("Exception 02")},
-        {"id": "3", "label": "Exception 03", "title": get_exception_title("Exception 03")}
-    ],
+        {"id": "1", "label": "All Exceptions", "title": get_exception_title("Exception 01")}],
     "columns": {
+        "exception_type": ["Exception Type"],
         "amount":   ["Net Order Value in PO Currency", "Net Price in Purchasing Document", "Amount in Local Currency", "Amount"],
         "vendor":   ["Vendor Name", "Vendor Account Number", "Name 1"],
         "date":     ["Purchasing Document Date", "Date on Which Record Was Created", "Posting Date"],
@@ -38,6 +36,7 @@ CONFIG = {
         {"id": "k6", "label": "Issue Count", "agg": "row_count"}
     ],
     "filters": [
+                {"id": "f_extype", "label": "Exception Type", "source": "exception_type"},
         {"id": "f1", "label": "Companies", "source": "company"},
         {"id": "f2", "label": "Vendors", "source": "vendor"},
         {"id": "f3", "label": "GL Accounts", "source": "gl"}
@@ -55,11 +54,16 @@ def meta():
     return {"id": CONFIG["id"], "name": CONFIG["name"], "category": "Spend_Analysis"}
 
 def get_data(exc_id):
-    paths = [
-        f"data_files/FJSP19_Exception0{exc_id}.csv",
-        f"data_files/FJSP19_Exception{exc_id}.csv"
-    ]
-    path = next((p for p in paths if os.path.exists(p)), None)
-    if path:
-        return pd.read_csv(path, encoding='latin1', low_memory=False).fillna('')
-    return None
+    insight_id = CONFIG["id"]
+    merged_df = pd.DataFrame()
+    for i in range(1, 10):
+        path1 = f"data_files/{insight_id}_Exception0{i}.csv"
+        path2 = f"data_files/{insight_id}_Exception{i}.csv"
+        path = next((p for p in [path1, path2] if os.path.exists(p)), None)
+        if path:
+            df = pd.read_csv(path, encoding='latin1', low_memory=False).fillna('')
+            df['Exception Type'] = f"Exception {i}"
+            merged_df = pd.concat([merged_df, df], ignore_index=True)
+    if merged_df.empty:
+        return None
+    return merged_df

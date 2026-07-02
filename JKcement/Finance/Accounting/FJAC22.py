@@ -13,7 +13,7 @@ CONFIG = {
     "active_exceptions": [
         {
             "id": "1", 
-            "label": "Exception 01", 
+            "label": "All Exceptions", 
             "title": get_exception_title("Duplicate Payments (Same Invoice Ref, Vendor, Amount, Period)"),
             "cards": [
                 {"id": "k1", "label": "Total Payments", "agg": "total_rows"},
@@ -24,6 +24,7 @@ CONFIG = {
                 {"id": "k6", "label": "Max Instances", "agg": "max", "source": "dup_count"}
             ],
             "filters": [
+                {"id": "f_extype", "label": "Exception Type", "source": "exception_type"},
                 {"id": "f1", "label": "Company Code", "source": "company"},
                 {"id": "f2", "label": "Fiscal Year", "source": "year"},
                 {"id": "f3", "label": "Vendor Code", "source": "vendor_code"}
@@ -53,6 +54,7 @@ CONFIG = {
         }
     ],
     "columns": {
+        "exception_type": ["Exception Type"],
         "amount":       ["Amount in Local Currency", "Amount", "DMBTR"],
         "vendor_code":  ["Vendor Code", "LIFNR"],
         "vendor_name":  ["Vendor Name", "NAME1"],
@@ -76,86 +78,16 @@ def meta():
     return {"id": CONFIG["id"], "name": CONFIG["name"], "category": "Accounting"}
 
 def get_data(exc_id):
-    # Filename is very long and has non-breaking spaces
-    search_pattern = rf"D:\off\JKC Dashboard\Completed Output\FJAC22\Output\Exception01_FJAC22_*.csv"
-    matches = glob.glob(search_pattern)
-    
-    # Fallback to output directory
-    if not matches:
-        matches = glob.glob(rf"D:\off\JKC Dashboard\output\FJAC22_Exception{int(exc_id):02}*.csv")
-        
-    if not matches:
+    insight_id = CONFIG["id"]
+    merged_df = pd.DataFrame()
+    for i in range(1, 10):
+        path1 = f"data_files/{insight_id}_Exception0{i}.csv"
+        path2 = f"data_files/{insight_id}_Exception{i}.csv"
+        path = next((p for p in [path1, path2] if os.path.exists(p)), None)
+        if path:
+            df = pd.read_csv(path, encoding='latin1', low_memory=False).fillna('')
+            df['Exception Type'] = f"Exception {i}"
+            merged_df = pd.concat([merged_df, df], ignore_index=True)
+    if merged_df.empty:
         return None
-        
-    path = matches[0]
-    
-    # Large file optimization: only read some columns if possible, but we need several for logic.
-    # The file has 5 lines of metadata/headers before the actual transaction headers.
-    try:
-        # Check first line for "Insight ID" to determine if we need to skip rows
-        with open(path, 'r', encoding='latin1') as f:
-            first_line = f.readline()
-        
-        skip = 0
-        if "Insight ID" in first_line:
-            skip = 4 # Skip 3 lines of metadata + 1 empty line
-            
-        df = pd.read_csv(path, encoding='latin1', low_memory=False, skiprows=skip).fillna('')
-    except Exception as e:
-        print(f"Error reading {path}: {e}")
-        return None
-    if df.empty:
-        return df
-
-    # Column Mapping Helpers
-    def find_col(key):
-        cands = CONFIG["columns"].get(key, [])
-        for c in df.columns:
-            if str(c).strip() in cands: return c
-        return None
-
-    col_amt = find_col("amount")
-    col_vend = find_col("vendor_code")
-    col_ref = find_col("ref_doc")
-    col_month = find_col("clearing_month")
-    col_year = find_col("clearing_year")
-    col_clr_dt = find_col("clearing_date")
-
-    # Amount cleaning
-    if col_amt:
-        df['amt_val'] = pd.to_numeric(df[col_amt].astype(str).str.replace(r'[^\d.-]', '', regex=True), errors='coerce').fillna(0)
-    else:
-        df['amt_val'] = 0
-
-    # Derived Logic: Duplicate payments
-    group_cols = []
-    if col_vend: group_cols.append(col_vend)
-    if col_ref: group_cols.append(col_ref)
-    if col_amt: group_cols.append(col_amt)
-    if col_month: group_cols.append(col_month)
-    if col_year: group_cols.append(col_year)
-
-    if len(group_cols) >= 3:
-        # Calculate counts per group
-        df['dup_count'] = df.groupby(group_cols)[group_cols[0]].transform('count')
-        df['is_exception'] = (df['dup_count'] > 1).astype(int)
-    else:
-        df['is_exception'] = 0
-        df['dup_count'] = 1
-
-    # Flagged helpers
-    df['affected_amount'] = np.where(df['is_exception'] == 1, df['amt_val'], 0)
-    df['status_label'] = np.where(df['is_exception'] == 1, "Duplicate Payments", "Valid Payments")
-    
-    if col_vend:
-        df['dup_vendor'] = np.where(df['is_exception'] == 1, df[col_vend].astype(str), "")
-    else:
-        df['dup_vendor'] = ""
-
-    # Date formatting for trend
-    if col_clr_dt:
-        df['clearing_date_dt'] = pd.to_datetime(df[col_clr_dt], errors='coerce').dt.strftime('%Y-%m-%d').fillna('')
-    else:
-        df['clearing_date_dt'] = ''
-
-    return df
+    return merged_df

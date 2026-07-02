@@ -8,7 +8,7 @@ CONFIG = {
     "active_exceptions": [
         {
             "id": "1",
-            "label": "Exception 01",
+            "label": "All Exceptions",
             "title": "Cases Where GST Invoices Have the Same Vendor Invoice Number (Reference Number) in the Same Fiscal Year",
             "cards": [
                 {"id": "k1", "label": "Duplicate GST Invoices", "agg": "unique", "source": "accounting_doc_num"},
@@ -19,6 +19,7 @@ CONFIG = {
                 {"id": "k6", "label": "Fiscal Years Impacted", "agg": "unique", "source": "fiscal_year"}
             ],
             "filters": [
+                {"id": "f_extype", "label": "Exception Type", "source": "exception_type"},
                 {"id": "f1", "label": "Company Code", "source": "company_code", "all_label": "All Companies"},
                 {"id": "f2", "label": "Vendor Code", "source": "vendor_code", "all_label": "All Vendors"},
                 {"id": "f3", "label": "Fiscal Year", "source": "fiscal_year", "all_label": "All Years"},
@@ -70,6 +71,7 @@ CONFIG = {
         }
     ],
     "columns": {
+        "exception_type": ["Exception Type"],
         "company_code": ["Company Code"],
         "company_desc": ["Company Description"],
         "vendor_code": ["Vendor Code"],
@@ -94,56 +96,16 @@ def meta():
     }
 
 def get_data(exc_id):
-    paths = [
-        rf"D:\off\JKC Dashboard\output\TJGS2_Exception{int(exc_id):02}.csv",
-        rf"data_files/TJGS2_Exception{int(exc_id):02}.csv"
-    ]
-    path = next((p for p in paths if os.path.exists(p)), None)
-    if not path:
+    insight_id = CONFIG["id"]
+    merged_df = pd.DataFrame()
+    for i in range(1, 10):
+        path1 = f"data_files/{insight_id}_Exception0{i}.csv"
+        path2 = f"data_files/{insight_id}_Exception{i}.csv"
+        path = next((p for p in [path1, path2] if os.path.exists(p)), None)
+        if path:
+            df = pd.read_csv(path, encoding='latin1', low_memory=False).fillna('')
+            df['Exception Type'] = f"Exception {i}"
+            merged_df = pd.concat([merged_df, df], ignore_index=True)
+    if merged_df.empty:
         return None
-        
-    df = pd.read_csv(path, encoding='latin1', low_memory=False)
-    df.columns = [str(c).strip() for c in df.columns]
-    
-    # Rename columns to standard schema
-    rename_map = {
-        "Company Code": "Company Code",
-        "Company Description": "Company Description",
-        "Company City": "Company City",
-        "Accounting Document Number": "Accounting Document Number",
-        "Document Date": "Document Date",
-        "Document type": "Document type",
-        "Posting Date": "Posting Date",
-        "Fiscal Year": "Fiscal Year",
-        "Vendor Code": "Vendor Code",
-        "Vendor Name": "Vendor Name",
-        "Vendor City": "Vendor City",
-        "Account group": "Account group",
-        "Account Type": "Account Type",
-        "Account Description": "Account Description",
-        "G/L": "G/L",
-        "G/L Account Long Text": "G/L Account Long Text",
-        "Reference": "Reference",
-        "Currency Key": "Currency Key",
-        "ITC-CGST": "ITC-CGST",
-        "ITC-SGST": "ITC-SGST",
-        "ITC-IGST": "ITC-IGST",
-        "Total GST": "Total GST",
-        "User Name": "User Name",
-        "Item Text": "Item Text",
-        "Search Term for Matchcode Search": "Search Term for Matchcode Search"
-    }
-    df = df.rename(columns=rename_map)
-    
-    # Ensure all required standard columns exist
-    for col in rename_map.values():
-        if col not in df.columns:
-            df[col] = 0.0 if "GST" in col or "ITC" in col else ""
-            
-    # Calculate Duplicate Invoice Amount (ITC-CGST + ITC-SGST + ITC-IGST)
-    cgst = pd.to_numeric(df["ITC-CGST"], errors='coerce').fillna(0)
-    sgst = pd.to_numeric(df["ITC-SGST"], errors='coerce').fillna(0)
-    igst = pd.to_numeric(df["ITC-IGST"], errors='coerce').fillna(0)
-    df["Duplicate Invoice Amount"] = cgst + sgst + igst
-    
-    return df.fillna('')
+    return merged_df

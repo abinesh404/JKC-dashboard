@@ -8,7 +8,7 @@ CONFIG = {
     "active_exceptions": [
         {
             "id": "1",
-            "label": "Exception 01",
+            "label": "All Exceptions",
             "title": "Cases Where the PR Number is Blank or Not Matching with PR Master Data",
             "cards": [
                 {"id": "k1", "label": "Invalid/Missing PR Cases", "agg": "unique", "source": "purch_doc_num"},
@@ -19,6 +19,7 @@ CONFIG = {
                 {"id": "k6", "label": "Total Quantity Without Valid PR", "agg": "total_value", "source": "po_qty"}
             ],
             "filters": [
+                {"id": "f_extype", "label": "Exception Type", "source": "exception_type"},
                 {"id": "f1", "label": "Company Code", "source": "company_code", "all_label": "All Companies"},
                 {"id": "f2", "label": "Name of Company", "source": "company_name", "all_label": "All Companies Names"},
                 {"id": "f3", "label": "City", "source": "city", "all_label": "All Cities"},
@@ -85,6 +86,7 @@ CONFIG = {
         }
     ],
     "columns": {
+        "exception_type": ["Exception Type"],
         "company_code": ["Company Code"],
         "company_name": ["Name of Company"],
         "city": ["City"],
@@ -118,70 +120,16 @@ def meta():
     }
 
 def get_data(exc_id):
-    paths = [
-        rf"D:\off\JKC Dashboard\output\FJIT15_Exception{int(exc_id):02}.csv",
-        rf"data_files/FJIT15_Exception{int(exc_id):02}.csv"
-    ]
-    path = next((p for p in paths if os.path.exists(p)), None)
-    if not path:
+    insight_id = CONFIG["id"]
+    merged_df = pd.DataFrame()
+    for i in range(1, 10):
+        path1 = f"data_files/{insight_id}_Exception0{i}.csv"
+        path2 = f"data_files/{insight_id}_Exception{i}.csv"
+        path = next((p for p in [path1, path2] if os.path.exists(p)), None)
+        if path:
+            df = pd.read_csv(path, encoding='latin1', low_memory=False).fillna('')
+            df['Exception Type'] = f"Exception {i}"
+            merged_df = pd.concat([merged_df, df], ignore_index=True)
+    if merged_df.empty:
         return None
-        
-    df = pd.read_csv(path, encoding='latin1', low_memory=False)
-    df.columns = [str(c).strip() for c in df.columns]
-    
-    # Rename columns to standard schema
-    rename_map = {
-        "Purchasing Document Number": "Purchasing Document Number",
-        "Item Number of Purchasing Document": "Item Number of Purchasing Document",
-        "Deletion Indicator in Purchasing Documen": "Deletion Indicator in Purchasing Documen",
-        "Material Number": "Material Number",
-        "Plant": "Plant",
-        "Purchase Requisition Unit of Measure": "Purchase Requisition Unit of Measure",
-        "Net Price in Purchasing Document": "Net Price in Purchasing Document",
-        "Price Unit": "Price Unit",
-        "Net Order Value in PO Currency": "Net Order Value in PO Currency",
-        "Gross order value in PO currency": "Gross order value in PO currency",
-        "Delivery Completed  Indicator": "Delivery Completed  Indicator",
-        "Item blocked for SD delivery": "Item blocked for SD delivery",
-        "Company Code": "Company Code",
-        "Purchasing Document Category": "Purchasing Document Category",
-        "Purchasing Document Type": "Purchasing Document Type",
-        "Control indicator for purchasing document type": "Control indicator for purchasing document type",
-        "Date on Which Record Was Created": "Date on Which Record Was Created",
-        "Name of Person who Created the Object": "Name of Person who Created the Object",
-        "Vendor Account Number": "Vendor Account Number",
-        "Purchasing Organization": "Purchasing Organization",
-        "Purchasing Group": "Purchasing Group",
-        "Currency Key": "Currency Key",
-        "Purchasing Document Date": "Purchasing Document Date",
-        "Purchase Requisition Number": "Purchase Requisition Number",
-        "Item Number of Purchase Requisition": "Item Number of Purchase Requisition",
-        "Batch Number": "Batch Number",
-        "Requisition Processing State": "Requisition Processing State",
-        "Purchase Requisition Blocked": "Purchase Requisition Blocked",
-        "Name of Company": "Name of Company",
-        "City": "City",
-        "Vendor Name": "Vendor Name",
-        "Region": "Region",
-        "Material Description": "Material Description",
-        "Numerator for Conversion of Order Unit to Base Unit": "Numerator for Conversion of Order Unit to Base Unit",
-        "Denominator for Conversion of Order Unit to Base Unit": "Denominator for Conversion of Order Unit to Base Unit",
-        "PO_Qty": "PO_Qty",
-        "PR_Qty": "PR_Qty",
-        "PO_Qty_Converted": "PO_Qty_Converted",
-        "Qty_Diff": "Qty_Diff",
-        "Qty_Status": "Qty_Status",
-        "Exception": "Exception"
-    }
-    df = df.rename(columns=rename_map)
-    
-    # Ensure all required standard columns exist
-    for col in rename_map.values():
-        if col not in df.columns:
-            df[col] = 0.0 if "Qty" in col or "Price" in col or "Value" in col or "value" in col else ""
-            
-    # Apply robust data cleaning
-    for num_col in ["PO_Qty_Converted", "Net Order Value in PO Currency"]:
-        df[num_col] = pd.to_numeric(df[num_col], errors='coerce').fillna(0.0)
-        
-    return df.fillna('')
+    return merged_df

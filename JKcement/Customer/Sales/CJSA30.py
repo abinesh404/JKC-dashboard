@@ -18,7 +18,7 @@ CONFIG = {
         {
             "id": "1",
 
-            "label": "Exception 01",
+            "label": "All Exceptions",
 
             "title": get_exception_title("Pending Processing"),
 
@@ -38,6 +38,7 @@ CONFIG = {
             ],
 
             "filters": [
+                {"id": "f_extype", "label": "Exception Type", "source": "exception_type"},
 
                 {"id": "f1", "label": "Company Name", "source": "company_name"},
 
@@ -64,6 +65,7 @@ CONFIG = {
     ],
 
     "columns": {
+        "exception_type": ["Exception Type"],
 
         "company": ["Company Code"],
 
@@ -99,16 +101,16 @@ def meta():
 
 
 def get_data(exc_id):
-
-    path = rf"D:\off\JKC Dashboard\output\CJSA29_Exception{int(exc_id):02}.csv"
-
-    if not os.path.exists(path):
-
+    insight_id = CONFIG["id"]
+    merged_df = pd.DataFrame()
+    for i in range(1, 10):
+        path1 = f"data_files/{insight_id}_Exception0{i}.csv"
+        path2 = f"data_files/{insight_id}_Exception{i}.csv"
+        path = next((p for p in [path1, path2] if os.path.exists(p)), None)
+        if path:
+            df = pd.read_csv(path, encoding='latin1', low_memory=False).fillna('')
+            df['Exception Type'] = f"Exception {i}"
+            merged_df = pd.concat([merged_df, df], ignore_index=True)
+    if merged_df.empty:
         return None
-
-    return pd.read_csv(
-        path,
-        encoding='latin1',
-        low_memory=False
-    ).fillna('')
-
+    return merged_df

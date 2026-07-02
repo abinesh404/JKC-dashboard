@@ -378,9 +378,9 @@ def get_html():
                 curExc = aCfg.active_exceptions?.[0]?.id || 1;
                 const eObj = aCfg.active_exceptions?.[0] || {};
                 $('#exc-title').text(eObj.title || '');
-                curExcFilters = eObj.filters || aCfg.filters || [];
-                curExcCards = eObj.cards || aCfg.cards || [];
-                curExcCharts = eObj.charts || aCfg.charts || [];
+                curExcFilters = eObj.filters || aCfg.filters || defaultFilters;
+                curExcCards = eObj.cards || aCfg.cards || defaultCards;
+                curExcCharts = eObj.charts || aCfg.charts || defaultCharts;
                 
                 buildExcBtns();
                 buildKPIs(curExcCards);
@@ -410,9 +410,9 @@ def get_html():
                 const eObj = (aCfg.active_exceptions || []).find(e => e.id == ex);
                 if (eObj) {
                     $('#exc-title').text(eObj.title || '');
-                    curExcFilters = eObj.filters || aCfg.filters || [];
-                    curExcCards = eObj.cards || aCfg.cards || [];
-                    curExcCharts = eObj.charts || aCfg.charts || [];
+                    curExcFilters = eObj.filters || aCfg.filters || defaultFilters;
+                    curExcCards = eObj.cards || aCfg.cards || defaultCards;
+                    curExcCharts = eObj.charts || aCfg.charts || defaultCharts;
 
                     buildKPIs(curExcCards);
                     buildSlicers(curExcFilters);

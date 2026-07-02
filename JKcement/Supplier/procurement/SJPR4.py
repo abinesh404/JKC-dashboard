@@ -13,99 +13,10 @@ CONFIG = {
     "id": "SJPR4",
     "name": "PO with non-global address",
     "active_exceptions": [
-        {
-            "id": "1",
-            "label": "Exception 01",
-            "title": get_exception_title("Delivery Address in PO Different from Master Address"),
-            "cards": [
-                {
-                    "id": "k1",
-                    "label": "Companies",
-                    "agg": "unique",
-                    "source": "company"
-                },
-                {
-                    "id": "k2",
-                    "label": "Plants",
-                    "agg": "unique",
-                    "source": "plant"
-                },
-                {
-                    "id": "k3",
-                    "label": "Vendors",
-                    "agg": "unique",
-                    "source": "vendor"
-                },
-                {
-                    "id": "k4",
-                    "label": "Purchase Orders",
-                    "agg": "unique",
-                    "source": "po"
-                },
-                {
-                    "id": "k5",
-                    "label": "Unique Delivery Addresses",
-                    "agg": "unique",
-                    "source": "delivery_address"
-                },
-                {
-                    "id": "k6",
-                    "label": "Total PO Value",
-                    "agg": "total_value",
-                    "source": "amount",
-                    "format": "currency"
-                }
-            ],
-            "filters": [
-                {"id": "f1", "label": "Company", "source": "company"},
-                {"id": "f2", "label": "Vendor", "source": "vendor"},
-                {"id": "f3", "label": "Plant", "source": "plant"}
-            ],
-            "charts": [
-                {
-                    "id": "c1",
-                    "type": "pie",
-                    "x": "vendor",
-                    "agg": "count",
-                    "top_n": 5,
-                    "title": "Top 5 Vendors with Address Exceptions"
-                },
-                {
-                    "id": "c2",
-                    "type": "bar",
-                    "x": "plant",
-                    "agg": "count",
-                    "top_n": 10,
-                    "horizontal": True,
-                    "title": "Top 10 Plants with Address Exceptions"
-                },
-                {
-                    "id": "c3",
-                    "type": "line",
-                    "x": "date",
-                    "agg": "count",
-                    "time_group": "month",
-                    "title": "Monthly Address Exception Trend"
-                },
-                {
-                    "id": "c4",
-                    "type": "doughnut",
-                    "x": "company",
-                    "agg": "count",
-                    "title": "Company-wise Address Exception Share"
-                },
-                {
-                    "id": "c5",
-                    "type": "bar",
-                    "x": "po_region",
-                    "agg": "count",
-                    "top_n": 10,
-                    "title": "Region-wise Address Exceptions"
-                }
-            ]
-        }
+        {"id": "1", "label": "Exception 01", "title": get_exception_title("Exception 01")}
     ],
     "columns": {
+        "exception_type": ["Exception Type"],
         "company": [
             "Company Code"
         ],
@@ -169,10 +80,10 @@ def meta():
 
 def get_data(exc_id):
     paths = [
-        f"data_files/SJPR4_Exception0{exc_id}.csv",
-        f"data_files/SJPR4_Exception{exc_id}.csv"
+        rf"data_files/SJPR4_Exception{int(exc_id):02}.csv",
+        rf"data_files/SJPR4_Exception{int(exc_id)}.csv"
     ]
     path = next((p for p in paths if os.path.exists(p)), None)
-    if not path:
-        return None
-    return pd.read_csv(path, encoding='latin1', low_memory=False).fillna('')
+    if path:
+        return pd.read_csv(path, encoding='latin1', low_memory=False).fillna('')
+    return None

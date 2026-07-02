@@ -9,7 +9,7 @@ CONFIG = {
     "active_exceptions": [
         {
             "id": "1",
-            "label": "Exception 01",
+            "label": "All Exceptions",
             "title": "Client Set to Modifiable",
             "cards": [
                 {"id": "k1", "label": "Modifiable Clients", "agg": "unique", "source": "client_number"},
@@ -20,6 +20,7 @@ CONFIG = {
                 {"id": "k6", "label": "High Risk Clients", "agg": "unique", "source": "high_risk_client"}
             ],
             "filters": [
+                {"id": "f_extype", "label": "Exception Type", "source": "exception_type"},
                 {"id": "f1", "label": "Client Number", "source": "client_number", "all_label": "All Clients"},
                 {"id": "f2", "label": "Client Role", "source": "client_role", "all_label": "All Roles"},
                 {"id": "f3", "label": "User Name", "source": "user_name", "all_label": "All Users"}
@@ -67,6 +68,7 @@ CONFIG = {
         }
     ],
     "columns": {
+        "exception_type": ["Exception Type"],
         "client_number": ["Client Number"],
         "client_role": ["Client Role"],
         "user_name": ["User Name"],
@@ -89,75 +91,25 @@ def meta():
     }
 
 def get_data(exc_id):
-    paths = [
-        rf"D:\off\JKC Dashboard\output\IJSA04_Exception01.csv",
-        rf"D:\off\JKC Dashboard\output\IJSA4_Exception{int(exc_id):02}.csv",
-        rf"data_files/IJSA04_Exception01.csv",
-        rf"data_files/IJSA4_Exception{int(exc_id):02}.csv"
-    ]
-    path = next((p for p in paths if os.path.exists(p)), None)
-    if not path:
+    insight_id = CONFIG["id"]
+    import re
+    m = re.search(r'([A-Za-z]+)(\d+)', insight_id)
+    padded_id = f"{m.group(1)}0{m.group(2)}" if m and len(m.group(2)) == 1 else insight_id
+    merged_df = pd.DataFrame()
+    file_found = False
+    for i in range(1, 10):
+        paths = [
+            f"data_files/{insight_id}_Exception0{i}.csv",
+            f"data_files/{insight_id}_Exception{i}.csv",
+            f"data_files/{padded_id}_Exception0{i}.csv",
+            f"data_files/{padded_id}_Exception{i}.csv"
+        ]
+        path = next((p for p in paths if os.path.exists(p)), None)
+        if path:
+            file_found = True
+            df = pd.read_csv(path, encoding='latin1', low_memory=False).fillna('')
+            df['Exception Type'] = f"Exception {i}"
+            merged_df = pd.concat([merged_df, df], ignore_index=True)
+    if not file_found:
         return None
-        
-    df = pd.read_csv(path, encoding='latin1', low_memory=False)
-    df.columns = [str(c).strip() for c in df.columns]
-    
-    # Ensure standard columns are present
-    required_cols = ["Client Name", "Client Number", "Client Role", "Change Option", "User Name", "Last Changed On"]
-    for col in required_cols:
-        if col not in df.columns:
-            df[col] = ""
-            
-    # Check if a client configuration allows modification
-    def is_modifiable(val):
-        if pd.isna(val) or val == "":
-            return False
-        val_str = str(val).strip().lower()
-        return any(x in val_str for x in ["allow", "modifiable", "change", "yes", "x", "1"])
-        
-    # Check if client role is Production
-    def is_production(val):
-        if pd.isna(val) or val == "":
-            return False
-        val_str = str(val).strip().lower()
-        return val_str in ["production", "prod", "p", "prd"]
-
-    # Build helpers for KPI cards
-    prod_clients = []
-    change_ids = []
-    last_mod_clients = []
-    high_risk_clients = []
-    
-    for idx, row in df.iterrows():
-        c_num = str(row.get("Client Number", "")).strip()
-        role = row.get("Client Role", "")
-        opt = row.get("Change Option", "")
-        uname = row.get("User Name", "")
-        chg_on = row.get("Last Changed On", "")
-        
-        # Prod Clients Impacted (Production role)
-        if is_production(role) and c_num:
-            prod_clients.append(c_num)
-        else:
-            prod_clients.append("")
-            
-        # Changes Made (Has Last Changed On entry)
-        if pd.notna(chg_on) and str(chg_on).strip() != "":
-            change_ids.append(f"Chg_{idx}")
-            last_mod_clients.append(c_num)
-        else:
-            change_ids.append("")
-            last_mod_clients.append("")
-            
-        # High Risk Clients (Production AND modifiable status)
-        if is_production(role) and is_modifiable(opt) and c_num:
-            high_risk_clients.append(c_num)
-        else:
-            high_risk_clients.append("")
-            
-    df["Prod Client Number"] = prod_clients
-    df["Change ID"] = change_ids
-    df["Last Mod Client"] = last_mod_clients
-    df["High Risk Client"] = high_risk_clients
-    
-    return df.fillna('')
+    return merged_df

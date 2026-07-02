@@ -13,186 +13,11 @@ CONFIG = {
     "id": "SJIT35",
     "name": "GR & IR Configurations over Item and Account Assignment Categories are Configured Inappropriately",
     "active_exceptions": [
-        {
-            "id": "1",
-            "label": "Exception 01",
-            "title": get_exception_title("GR & IR Configurations over Item Category Type are Configured Inappropriately"),
-            "cards": [
-                {
-                    "id": "k1",
-                    "label": "Item Categories",
-                    "agg": "unique",
-                    "source": "item_category"
-                },
-                {
-                    "id": "k2",
-                    "label": "Materials",
-                    "agg": "unique",
-                    "source": "material"
-                },
-                {
-                    "id": "k3",
-                    "label": "Account Assignment Categories",
-                    "agg": "unique",
-                    "source": "account_assignment"
-                },
-                {
-                    "id": "k4",
-                    "label": "Business Item Types",
-                    "agg": "unique",
-                    "source": "business_item_type"
-                },
-                {
-                    "id": "k5",
-                    "label": "GR Configuration Exceptions",
-                    "agg": "row_count"
-                },
-                {
-                    "id": "k6",
-                    "label": "IR Configuration Exceptions",
-                    "agg": "row_count"
-                }
-            ],
-            "filters": [
-                {"id": "f1", "label": "Item Category", "source": "item_category"},
-                {"id": "f2", "label": "Account Assignment Category", "source": "account_assignment"},
-                {"id": "f3", "label": "Business Item Type", "source": "business_item_type"}
-            ],
-            "charts": [
-                {
-                    "id": "c1",
-                    "type": "pie",
-                    "x": "item_category",
-                    "agg": "count",
-                    "legend": True,
-                    "top_n": 5,
-                    "title": "Top Item Categories with Configuration Exceptions"
-                },
-                {
-                    "id": "c2",
-                    "type": "bar",
-                    "x": "account_assignment",
-                    "agg": "count",
-                    "horizontal": True,
-                    "top_n": 5,
-                    "title": "Account Assignment Category Distribution"
-                },
-                {
-                    "id": "c3",
-                    "type": "line",
-                    "x": "gr_indicator",
-                    "agg": "count",
-                    "title": "GR Indicator Distribution"
-                },
-                {
-                    "id": "c4",
-                    "type": "doughnut",
-                    "x": "business_item_type",
-                    "agg": "count",
-                    "legend": True,
-                    "top_n": 5,
-                    "title": "Business Item Type Distribution"
-                },
-                {
-                    "id": "c5",
-                    "type": "bar",
-                    "x": "ir_indicator",
-                    "agg": "count",
-                    "title": "Invoice Receipt Indicator Analysis"
-                }
-            ]
-        },
-        {
-            "id": "2",
-            "label": "Exception 02",
-            "title": get_exception_title("GR & IR Configurations over Account Assignment Categories are Configured Inappropriately"),
-            "cards": [
-                {
-                    "id": "k1",
-                    "label": "Account Assignment Categories",
-                    "agg": "unique",
-                    "source": "account_assignment"
-                },
-                {
-                    "id": "k2",
-                    "label": "Item Categories",
-                    "agg": "unique",
-                    "source": "item_category"
-                },
-                {
-                    "id": "k3",
-                    "label": "Materials",
-                    "agg": "unique",
-                    "source": "material"
-                },
-                {
-                    "id": "k4",
-                    "label": "Business Item Types",
-                    "agg": "unique",
-                    "source": "business_item_type"
-                },
-                {
-                    "id": "k5",
-                    "label": "GR Configuration Exceptions",
-                    "agg": "row_count"
-                },
-                {
-                    "id": "k6",
-                    "label": "IR Configuration Exceptions",
-                    "agg": "row_count"
-                }
-            ],
-            "filters": [
-                {"id": "f1", "label": "Account Assignment Category", "source": "account_assignment"},
-                {"id": "f2", "label": "Item Category", "source": "item_category"},
-                {"id": "f3", "label": "Business Item Type", "source": "business_item_type"}
-            ],
-            "charts": [
-                {
-                    "id": "c1",
-                    "type": "pie",
-                    "x": "account_assignment",
-                    "agg": "count",
-                    "legend": True,
-                    "top_n": 5,
-                    "title": "Top Account Assignment Categories with Configuration Exceptions"
-                },
-                {
-                    "id": "c2",
-                    "type": "bar",
-                    "x": "item_category",
-                    "agg": "count",
-                    "horizontal": True,
-                    "top_n": 5,
-                    "title": "Item Category Distribution"
-                },
-                {
-                    "id": "c3",
-                    "type": "line",
-                    "x": "ir_binding_indicator_aa",
-                    "agg": "count",
-                    "title": "IR Binding Indicator Analysis"
-                },
-                {
-                    "id": "c4",
-                    "type": "doughnut",
-                    "x": "business_item_type",
-                    "agg": "count",
-                    "legend": True,
-                    "top_n": 5,
-                    "title": "Business Item Type Distribution"
-                },
-                {
-                    "id": "c5",
-                    "type": "bar",
-                    "x": "gr_indicator",
-                    "agg": "count",
-                    "title": "GR Indicator Analysis"
-                }
-            ]
-        }
+        {"id": "1", "label": "Exception 01", "title": get_exception_title("Exception 01")},
+        {"id": "2", "label": "Exception 02", "title": get_exception_title("Exception 02")}
     ],
     "columns": {
+        "exception_type": ["Exception Type"],
         "item_category": [
             "Item Category",
             "Text for Item Cat.",
@@ -285,10 +110,10 @@ def meta():
 
 def get_data(exc_id):
     paths = [
-        f"data_files/SJIT35_Exception0{exc_id}.csv",
-        f"data_files/SJIT35_Exception{exc_id}.csv"
+        rf"data_files/SJIT35_Exception{int(exc_id):02}.csv",
+        rf"data_files/SJIT35_Exception{int(exc_id)}.csv"
     ]
     path = next((p for p in paths if os.path.exists(p)), None)
-    if not path:
-        return None
-    return pd.read_csv(path, encoding='latin1', low_memory=False).fillna('')
+    if path:
+        return pd.read_csv(path, encoding='latin1', low_memory=False).fillna('')
+    return None

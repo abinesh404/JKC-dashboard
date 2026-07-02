@@ -13,198 +13,11 @@ CONFIG = {
     "id": "SJPR54",
     "name": "Same Transaction & Group PO & Non-PO Invoices Raised",
     "active_exceptions": [
-        {
-            "id": "1",
-            "label": "Exception 01",
-            "title": get_exception_title("Transactions where for the Same GL Account PO & Non-PO Invoices have been Raised"),
-            "cards": [
-                {
-                    "id": "k1",
-                    "label": "Companies",
-                    "agg": "unique",
-                    "source": "company"
-                },
-                {
-                    "id": "k2",
-                    "label": "Plants",
-                    "agg": "unique",
-                    "source": "plant"
-                },
-                {
-                    "id": "k3",
-                    "label": "Vendors",
-                    "agg": "unique",
-                    "source": "vendor"
-                },
-                {
-                    "id": "k4",
-                    "label": "Accounting Documents",
-                    "agg": "unique",
-                    "source": "invoice"
-                },
-                {
-                    "id": "k5",
-                    "label": "G/L Accounts",
-                    "agg": "unique",
-                    "source": "gl"
-                },
-                {
-                    "id": "k6",
-                    "label": "Total Transaction Value",
-                    "agg": "total_value",
-                    "source": "amount",
-                    "format": "currency"
-                }
-            ],
-            "filters": [
-                {"id": "f1", "label": "Company", "source": "company"},
-                {"id": "f2", "label": "Vendor", "source": "vendor"},
-                {"id": "f3", "label": "Purchasing Organization", "source": "purch_org"}
-            ],
-            "charts": [
-                {
-                    "id": "c1",
-                    "type": "pie",
-                    "x": "gl_desc",
-                    "y": "amount",
-                    "agg": "sum",
-                    "top_n": 5,
-                    "title": "Top 5 G/L Accounts by Transaction Value"
-                },
-                {
-                    "id": "c2",
-                    "type": "bar",
-                    "x": "vendor",
-                    "y": "amount",
-                    "agg": "sum",
-                    "top_n": 10,
-                    "horizontal": True,
-                    "title": "Top 10 Vendors by Transaction Value"
-                },
-                {
-                    "id": "c3",
-                    "type": "line",
-                    "x": "posting_date",
-                    "agg": "count",
-                    "time_group": "month",
-                    "title": "Monthly Exception Trend"
-                },
-                {
-                    "id": "c4",
-                    "type": "doughnut",
-                    "x": "company_desc",
-                    "y": "amount",
-                    "agg": "sum",
-                    "title": "Company-wise Transaction Share"
-                },
-                {
-                    "id": "c5",
-                    "type": "bar",
-                    "x": "plant_name",
-                    "y": "amount",
-                    "agg": "sum",
-                    "top_n": 10,
-                    "title": "Top Plants by Transaction Value"
-                }
-            ]
-        },
-        {
-            "id": "2",
-            "label": "Exception 02",
-            "title": get_exception_title("Transactions where for the Same Group Account PO & Non-PO Invoices have been Raised"),
-            "cards": [
-                {
-                    "id": "k1",
-                    "label": "Companies",
-                    "agg": "unique",
-                    "source": "company"
-                },
-                {
-                    "id": "k2",
-                    "label": "Plants",
-                    "agg": "unique",
-                    "source": "plant"
-                },
-                {
-                    "id": "k3",
-                    "label": "Vendors",
-                    "agg": "unique",
-                    "source": "vendor"
-                },
-                {
-                    "id": "k4",
-                    "label": "Accounting Documents",
-                    "agg": "unique",
-                    "source": "invoice"
-                },
-                {
-                    "id": "k5",
-                    "label": "G/L Account Groups",
-                    "agg": "unique",
-                    "source": "gl_group"
-                },
-                {
-                    "id": "k6",
-                    "label": "Total Transaction Value",
-                    "agg": "total_value",
-                    "source": "amount",
-                    "format": "currency"
-                }
-            ],
-            "filters": [
-                {"id": "f1", "label": "Company", "source": "company"},
-                {"id": "f2", "label": "Vendor", "source": "vendor"},
-                {"id": "f3", "label": "Purchasing Organization", "source": "purch_org"}
-            ],
-            "charts": [
-                {
-                    "id": "c1",
-                    "type": "pie",
-                    "x": "gl_group",
-                    "y": "amount",
-                    "agg": "sum",
-                    "top_n": 5,
-                    "title": "Top 5 G/L Account Groups by Transaction Value"
-                },
-                {
-                    "id": "c2",
-                    "type": "bar",
-                    "x": "vendor",
-                    "y": "amount",
-                    "agg": "sum",
-                    "top_n": 10,
-                    "horizontal": True,
-                    "title": "Top 10 Vendors by Transaction Value"
-                },
-                {
-                    "id": "c3",
-                    "type": "line",
-                    "x": "posting_date",
-                    "agg": "count",
-                    "time_group": "month",
-                    "title": "Monthly Exception Trend"
-                },
-                {
-                    "id": "c4",
-                    "type": "doughnut",
-                    "x": "company_desc",
-                    "y": "amount",
-                    "agg": "sum",
-                    "title": "Company-wise Transaction Share"
-                },
-                {
-                    "id": "c5",
-                    "type": "bar",
-                    "x": "gl_group",
-                    "y": "amount",
-                    "agg": "sum",
-                    "top_n": 10,
-                    "title": "Top G/L Account Groups by Transaction Value"
-                }
-            ]
-        }
+        {"id": "1", "label": "Exception 01", "title": get_exception_title("Exception 01")},
+        {"id": "2", "label": "Exception 02", "title": get_exception_title("Exception 02")}
     ],
     "columns": {
+        "exception_type": ["Exception Type"],
         "company": [
             "Company Code",
             "Company Description",
@@ -298,10 +111,10 @@ def meta():
 
 def get_data(exc_id):
     paths = [
-        f"data_files/SJPR54_Exception0{exc_id}.csv",
-        f"data_files/SJPR54_Exception{exc_id}.csv"
+        rf"data_files/SJPR54_Exception{int(exc_id):02}.csv",
+        rf"data_files/SJPR54_Exception{int(exc_id)}.csv"
     ]
     path = next((p for p in paths if os.path.exists(p)), None)
-    if not path:
-        return None
-    return pd.read_csv(path, encoding='latin1', low_memory=False).fillna('')
+    if path:
+        return pd.read_csv(path, encoding='latin1', low_memory=False).fillna('')
+    return None

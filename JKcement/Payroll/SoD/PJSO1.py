@@ -16,26 +16,13 @@ CONFIG = {
         "company": ["Company Code","Company Name"],
         "detail": ["Conflict Type","Table 1","Table 2","Risk Level"]
     },
-                    "cards": [
-        {"id": "k1", "label": "Companies", "agg": "unique", "source": "company"},
-        {"id": "k2", "label": "Users", "agg": "unique", "source": "user"},
-        {"id": "k3", "label": "Records", "agg": "total_rows"},
-        {"id": "k4", "label": "Total Occurrences", "agg": "total_rows"},
-        {"id": "k5", "label": "Roles", "agg": "unique", "source": "role"},
-        {"id": "k6", "label": "Issue Count", "agg": "row_count"}
-    ],
+                    "cards": [{'id': 'k1', 'label': 'Violator Count', 'agg': 'unique', 'source': 'user'}, {'id': 'k2', 'label': 'SoD Violations', 'agg': 'total_rows'}, {'id': 'k3', 'label': 'Impacted Companies', 'agg': 'unique', 'source': 'company'}, {'id': 'k4', 'label': 'Active Roles In Conflict', 'agg': 'unique', 'source': 'role'}],
     "filters": [
         {"id": "f1", "label": "Companies", "source": "company"},
         {"id": "f2", "label": "Users", "source": "user"},
         {"id": "f3", "label": "Roles", "source": "role"}
     ],
-    "charts": [
-        {"id": "c1", "type": "pie", "x": "user", "agg": "count", "top_n": 5, "title": get_chart_title("User", "Count", top_n=5)},
-        {"id": "c2", "type": "bar", "x": "company", "agg": "count", "top_n": 10, "horizontal": True, "title": get_chart_title("Company", "Count", top_n=10)},
-        {"id": "c3", "type": "line", "x": "date", "agg": "count", "time_group": "month", "title": get_chart_title("Month", "Count")},
-        {"id": "c4", "type": "doughnut", "x": "role", "agg": "count", "title": get_chart_title("Role")},
-        {"id": "c5", "type": "bar", "x": "role", "agg": "count", "top_n": 10, "title": get_chart_title("Role", "Count", top_n=10)}
-    ]
+    "charts": [{'id': 'c1', 'type': 'bar', 'x': 'company', 'agg': 'count', 'title': 'SOD VIOLATIONS BY COMPANY'}, {'id': 'c2', 'type': 'pie', 'x': 'user', 'agg': 'count', 'top_n': 5, 'title': 'TOP 5 USER SOD VIOLATORS'}, {'id': 'c3', 'type': 'line', 'x': 'date', 'agg': 'count', 'time_group': 'month', 'title': 'SOD VIOLATIONS TREND'}]
 }
 
 def meta():
@@ -43,7 +30,7 @@ def meta():
 
 def get_data(exc_id):
     paths = [
-        rf"D:\off\JKC Dashboard\output\PJSO1_Exception{int(exc_id):02}.csv"
+        rf"data_files/PJSO1_Exception{int(exc_id):02}.csv"
     ]
     path = next((p for p in paths if os.path.exists(p)), None)
     if path:

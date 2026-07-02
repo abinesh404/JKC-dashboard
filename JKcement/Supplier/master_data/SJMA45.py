@@ -1,38 +1,16 @@
 # Supplier/master_data/SJMA45.py
 import pandas as pd
 import os
+from .template import get_exception_title
 
 CONFIG = {
     "id": "SJMA45",
     "name": "Variation in Payment terms in Invoice vs Masters",
     "active_exceptions": [
-        {
-            "id": "1",
-            "label": "Exception 01",
-            "title": "Variation in Payment Terms in Invoice vs Master",
-            "cards": [
-                {"id": "k1", "label": "Customers Impacted", "agg": "unique", "source": "customer"},
-                {"id": "k2", "label": "Companies Impacted", "agg": "unique", "source": "company"},
-                {"id": "k3", "label": "Billing Documents", "agg": "unique", "source": "billing_doc"},
-                {"id": "k4", "label": "Total Invoice Amount", "agg": "total_value", "source": "amount", "format": "currency"},
-                {"id": "k5", "label": "Average Overdue Days", "agg": "avg", "source": "overdue_days"},
-                {"id": "k6", "label": "Payment Term Variations", "agg": "total_rows"}
-            ],
-            "filters": [
-                {"id": "f1", "label": "Company", "source": "company"},
-                {"id": "f2", "label": "Customer", "source": "customer"},
-                {"id": "f3", "label": "Payment Terms (Invoice)", "source": "pay_terms_inv"}
-            ],
-            "charts": [
-                {"id": "c1", "type": "bar", "x": "company_name", "agg": "count", "title": "Company-wise Payment Term Variations"},
-                {"id": "c2", "type": "bar", "x": "customer_name", "y": "amount", "agg": "sum", "top_n": 10, "horizontal": True, "title": "Top Customers by Invoice Amount"},
-                {"id": "c3", "type": "doughnut", "x": "ageing_bracket", "agg": "count", "title": "Ageing Bracket Distribution", "legend": True},
-                {"id": "c4", "type": "line", "x": "payment_date", "agg": "count", "time_group": "month", "title": "Monthly Payment Term Variation Trend"},
-                {"id": "c5", "type": "bar", "x": "pay_terms_inv", "y": "overdue_days", "agg": "avg", "title": "Payment Term Difference Analysis"}
-            ]
-        }
+        {"id": "1", "label": "Exception 01", "title": get_exception_title("Exception 01")}
     ],
     "columns": {
+        "exception_type": ["Exception Type"],
         "company": ["Company Name", "Company Code"],
         "company_name": ["Company Name"],
         "customer": ["Customer Name", "Customer Number"],
@@ -58,10 +36,10 @@ def meta():
 
 def get_data(exc_id):
     paths = [
-        f"data_files/SJMA45_Exception0{exc_id}.csv",
-        f"data_files/SJMA45_Exception{exc_id}.csv"
+        rf"data_files/SJMA45_Exception{int(exc_id):02}.csv",
+        rf"data_files/SJMA45_Exception{int(exc_id)}.csv"
     ]
     path = next((p for p in paths if os.path.exists(p)), None)
-    if not path:
-        return None
-    return pd.read_csv(path, encoding='latin1', low_memory=False).fillna('')
+    if path:
+        return pd.read_csv(path, encoding='latin1', low_memory=False).fillna('')
+    return None

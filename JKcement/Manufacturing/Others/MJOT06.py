@@ -8,7 +8,7 @@ CONFIG = {
     "active_exceptions": [
         {
             "id": "1",
-            "label": "Exception 01",
+            "label": "All Exceptions",
             "title": "Actual Yield Loss Exceeds Standard Yield Loss Percentage",
             "cards": [
                 {"id": "k1", "label": "Production Orders with Yield Loss", "agg": "unique", "source": "order_number"},
@@ -19,6 +19,7 @@ CONFIG = {
                 {"id": "k6", "label": "Average Yield Loss %", "agg": "avg", "source": "actual_loss_percent"}
             ],
             "filters": [
+                {"id": "f_extype", "label": "Exception Type", "source": "exception_type"},
                 {"id": "f1", "label": "Plant", "source": "plant", "all_label": "All Plants"},
                 {"id": "f2", "label": "Work Center ID", "source": "work_center_id", "all_label": "All Work Centers"},
                 {"id": "f3", "label": "MRP Controller", "source": "mrp_controller", "all_label": "All Controllers"}
@@ -71,6 +72,7 @@ CONFIG = {
         }
     ],
     "columns": {
+        "exception_type": ["Exception Type"],
         "plant": ["Plant"],
         "work_center_id": ["Work Center ID"],
         "mrp_controller": ["MRP Controller"],
@@ -94,57 +96,16 @@ def meta():
     }
 
 def get_data(exc_id):
-    paths = [
-        rf"D:\off\JKC Dashboard\output\MJOT06_Exception{int(exc_id):02}.csv",
-        rf"data_files/MJOT06_Exception{int(exc_id):02}.csv"
-    ]
-    path = next((p for p in paths if os.path.exists(p)), None)
-    if not path:
+    insight_id = CONFIG["id"]
+    merged_df = pd.DataFrame()
+    for i in range(1, 10):
+        path1 = f"data_files/{insight_id}_Exception0{i}.csv"
+        path2 = f"data_files/{insight_id}_Exception{i}.csv"
+        path = next((p for p in [path1, path2] if os.path.exists(p)), None)
+        if path:
+            df = pd.read_csv(path, encoding='latin1', low_memory=False).fillna('')
+            df['Exception Type'] = f"Exception {i}"
+            merged_df = pd.concat([merged_df, df], ignore_index=True)
+    if merged_df.empty:
         return None
-        
-    df = pd.read_csv(path, encoding='latin1', low_memory=False)
-    df.columns = [str(c).strip() for c in df.columns]
-    
-    # Rename columns to standard schema
-    rename_map = {
-        "Order Number": "Order Number",
-        "Material Number": "Material Number",
-        "Plant": "Plant",
-        "Work Center ID": "Work Center ID",
-        "Operation Short Text": "Operation Short Text",
-        "Operation/Activity Number": "Operation/Activity Number",
-        "Created By": "Created By",
-        "Created Date": "Created Date",
-        "Posting Date": "Posting Date",
-        "Basic Finish Date": "Basic Finish Date",
-        "Basic Start Date": "Basic Start Date",
-        "Reservation Number": "Reservation Number",
-        "Reservation Item": "Reservation Item",
-        "Storage Location": "Storage Location",
-        "Purchase Document Item Number": "Purchase Document Item Number",
-        "Purchase Document Number": "Purchase Document Number",
-        "Vendor Code": "Vendor Code",
-        "Movement Type": "Movement Type",
-        "MRP Controller": "MRP Controller",
-        "Planned output quantity": "Planned output quantity",
-        "Requirement Quantity": "Requirement Quantity",
-        "Unit Measure": "Unit Measure",
-        "Withdrawn Quantity": "Withdrawn Quantity",
-        "Actual yield (confirmed)": "Actual yield (confirmed)",
-        "Actual_Yield_Percent": "Actual_Yield_Percent",
-        "Actual_Loss_Percent": "Actual_Loss_Percent",
-        "Standard_Yield_Loss": "Standard_Yield_Loss"
-    }
-    df = df.rename(columns=rename_map)
-    
-    # Ensure all required standard columns exist
-    for col in rename_map.values():
-        if col not in df.columns:
-            df[col] = 0.0 if "Qty" in col or "quantity" in col or "Percent" in col or "Loss" in col else ""
-            
-    # Calculate Yield Variance (Actual_Loss_Percent - Standard_Yield_Loss)
-    act_loss = pd.to_numeric(df["Actual_Loss_Percent"], errors='coerce').fillna(0)
-    std_loss = pd.to_numeric(df["Standard_Yield_Loss"], errors='coerce').fillna(0)
-    df["Yield Variance"] = act_loss - std_loss
-    
-    return df.fillna('')
+    return merged_df

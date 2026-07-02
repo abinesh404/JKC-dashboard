@@ -8,7 +8,7 @@ CONFIG = {
     "active_exceptions": [
         {
             "id": "1",
-            "label": "Exception 01",
+            "label": "All Exceptions",
             "title": "No Inspection Lot Was Created for the Original Document",
             "cards": [
                 {"id": "k1", "label": "Materials Without QA Inspection", "agg": "unique", "source": "material_number"},
@@ -19,6 +19,7 @@ CONFIG = {
                 {"id": "k6", "label": "Batches Without Inspection Lot", "agg": "unique", "source": "batch_number"}
             ],
             "filters": [
+                {"id": "f_extype", "label": "Exception Type", "source": "exception_type"},
                 {"id": "f1", "label": "Company Code", "source": "company_code", "all_label": "All Companies"},
                 {"id": "f2", "label": "Plant", "source": "plant", "all_label": "All Plants"},
                 {"id": "f3", "label": "Material Number", "source": "material_number", "all_label": "All Materials"}
@@ -68,6 +69,7 @@ CONFIG = {
         }
     ],
     "columns": {
+        "exception_type": ["Exception Type"],
         "company_code": ["Company Code"],
         "company_name": ["Company Name"],
         "plant": ["Plant"],
@@ -89,58 +91,16 @@ def meta():
     }
 
 def get_data(exc_id):
-    paths = [
-        rf"D:\off\JKC Dashboard\output\MJIM3_Exception{int(exc_id):02}.csv",
-        rf"data_files/MJIM3_Exception{int(exc_id):02}.csv"
-    ]
-    path = next((p for p in paths if os.path.exists(p)), None)
-    if not path:
+    insight_id = CONFIG["id"]
+    merged_df = pd.DataFrame()
+    for i in range(1, 10):
+        path1 = f"data_files/{insight_id}_Exception0{i}.csv"
+        path2 = f"data_files/{insight_id}_Exception{i}.csv"
+        path = next((p for p in [path1, path2] if os.path.exists(p)), None)
+        if path:
+            df = pd.read_csv(path, encoding='latin1', low_memory=False).fillna('')
+            df['Exception Type'] = f"Exception {i}"
+            merged_df = pd.concat([merged_df, df], ignore_index=True)
+    if merged_df.empty:
         return None
-        
-    df = pd.read_csv(path, encoding='latin1', low_memory=False)
-    df.columns = [str(c).strip() for c in df.columns]
-    
-    # Rename columns to match Suggested Column Mapping exactly
-    rename_map = {
-        "Company Code": "Company Code",
-        "Company Name": "Company Name",
-        "City": "City",
-        "Country": "Country",
-        "Currency": "Currency",
-        "Language": "Language",
-        "Plant": "Plant",
-        "Batch Number": "Batch Number",
-        "Material Number": "Material Number",
-        "Customer": "Customer",
-        "Vendor Code": "Vendor Code",
-        "Accounting Document Number": "Accounting Document Number",
-        "Storage Location": "Storage Location",
-        "Material Document Number": "Material Document Number",
-        "Decision code": "Decision Code",
-        "UD_Result": "UD_Result",
-        "Order Number": "Order Number",
-        "Amount": "Amount",
-        "Manufacture Date": "Manufacture Date",
-        "Unit Measure": "Unit Measure",
-        "Fiscal Year": "Fiscal Year",
-        "Item Text_full MSEG": "Item Text_full MSEG",
-        "Credit/Debit Indicator": "Credit/Debit Indicator",
-        "User Name": "User Name",
-        "Usage Decision Date": "Usage Decision Date",
-        "Inspection_Setup_Required": "Inspection_Setup_Required",
-        "Inspection Lot Number": "Inspection Lot Number",
-        "Inspection_Lot_Available": "Inspection_Lot_Available",
-        "Subsequently_QA_Testing_Done": "Subsequently_QA_Testing_Done",
-        "Subsequent_Transaction_Type": "Subsequent_Transaction_Type",
-        "Movement Type": "Movement Type",
-        "Quantity": "Quantity"
-    }
-    df = df.rename(columns=rename_map)
-    
-    # Ensure all required standard columns exist
-    required_cols = list(rename_map.values())
-    for col in required_cols:
-        if col not in df.columns:
-            df[col] = ""
-            
-    return df.fillna('')
+    return merged_df

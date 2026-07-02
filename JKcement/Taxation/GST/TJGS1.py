@@ -8,7 +8,7 @@ CONFIG = {
     "active_exceptions": [
         {
             "id": "1",
-            "label": "Exception 01",
+            "label": "All Exceptions",
             "title": "Instances Where Payment Has Been Made After 180 Days from the Invoice Date and Resultant Interest Loss on GST",
             "cards": [
                 {"id": "k1", "label": "Delayed GST Payments", "agg": "unique", "source": "accounting_document_number"},
@@ -19,6 +19,7 @@ CONFIG = {
                 {"id": "k6", "label": "Average Delay Days", "agg": "avg", "source": "days_delay"}
             ],
             "filters": [
+                {"id": "f_extype", "label": "Exception Type", "source": "exception_type"},
                 {"id": "f1", "label": "Company Code", "source": "company_code", "all_label": "All Companies"},
                 {"id": "f2", "label": "Vendor", "source": "vendor", "all_label": "All Vendors"},
                 {"id": "f3", "label": "Plant", "source": "plant", "all_label": "All Plants"},
@@ -70,6 +71,7 @@ CONFIG = {
         }
     ],
     "columns": {
+        "exception_type": ["Exception Type"],
         "company_code": ["Company Code"],
         "vendor": ["Vendor"],
         "plant": ["Plant"],
@@ -93,61 +95,16 @@ def meta():
     }
 
 def get_data(exc_id):
-    paths = [
-        rf"D:\off\JKC Dashboard\output\TJGS1_Exception{int(exc_id):02}.csv",
-        rf"data_files/TJGS1_Exception{int(exc_id):02}.csv"
-    ]
-    path = next((p for p in paths if os.path.exists(p)), None)
-    if not path:
+    insight_id = CONFIG["id"]
+    merged_df = pd.DataFrame()
+    for i in range(1, 10):
+        path1 = f"data_files/{insight_id}_Exception0{i}.csv"
+        path2 = f"data_files/{insight_id}_Exception{i}.csv"
+        path = next((p for p in [path1, path2] if os.path.exists(p)), None)
+        if path:
+            df = pd.read_csv(path, encoding='latin1', low_memory=False).fillna('')
+            df['Exception Type'] = f"Exception {i}"
+            merged_df = pd.concat([merged_df, df], ignore_index=True)
+    if merged_df.empty:
         return None
-        
-    df = pd.read_csv(path, encoding='latin1', low_memory=False)
-    df.columns = [str(c).strip() for c in df.columns]
-    
-    # Rename columns to standard schema
-    rename_map = {
-        "Document Number of the Clearing Document": "Document Number of the Clearing Document",
-        "Clearing Entry Date": "Clearing Entry Date",
-        "Clearing Date": "Clearing Date",
-        "Reference Key": "Reference Key",
-        "Accounting Document Number": "Accounting Document Number",
-        "Posting Key": "Posting Key",
-        "Company Code": "Company Code",
-        "Number of Line Item Within Accounting Document": "Number of Line Item Within Accounting Document",
-        "Identification of the Line Item": "Identification of the Line Item",
-        "Amount in Local Currency": "Amount in Local Currency",
-        "Fiscal Year": "Fiscal Year",
-        "Doc Type_Bseg": "Doc Type_Bseg",
-        "General Ledger Account": "General Ledger Account",
-        "Vendor": "Vendor",
-        "Due On": "Due On",
-        "Debit/Credit Indicator": "Debit/Credit Indicator",
-        "Billing Document": "Billing Document",
-        "Plant": "Plant",
-        "Amount in document currency": "Amount in document currency",
-        "Days_Delay": "Days_Delay",
-        "Name of Company": "Name of Company",
-        "City": "City",
-        "Country Key": "Country Key",
-        "Language Key": "Language Key",
-        "VAT Registration Number": "VAT Registration Number",
-        "Document Type_Bkpf": "Document Type_Bkpf",
-        "Document Date in Document": "Document Date in Document",
-        "Posting Date in the Document": "Posting Date in the Document",
-        "Day On Which Accounting Document Was Entered": "Day On Which Accounting Document Was Entered",
-        "Transaction Code": "Transaction Code",
-        "User name": "User name",
-        "G/L Account Number": "G/L Account Number",
-        "G/L Account Description": "G/L Account Description",
-        "GST_STATUS": "GST_STATUS",
-        "GST_Amount": "GST_Amount",
-        "Interest_Loss": "Interest_Loss"
-    }
-    df = df.rename(columns=rename_map)
-    
-    # Ensure all required standard columns exist
-    for col in rename_map.values():
-        if col not in df.columns:
-            df[col] = 0.0 if "Amount" in col or "Loss" in col or "Delay" in col else ""
-            
-    return df.fillna('')
+    return merged_df

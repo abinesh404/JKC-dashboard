@@ -14,54 +14,13 @@ CONFIG = {
     "name": "Sales return quantity variance",
 
     "active_exceptions": [
-
-        {
-            "id": "1",
-
-            "label": "Exception 01",
-
-            "title": get_exception_title("Sales return quantity variance"),
-
-            "cards": [
-
-                {"id": "k1", "label": "Company Code", "agg": "unique", "source": "company"},
-
-                {"id": "k2", "label": "Material", "agg": "unique", "source": "material"},
-
-                {"id": "k3", "label": "Plant", "agg": "unique", "source": "plant"},
-
-                {"id": "k4", "label": "Billing Doc", "agg": "unique", "source": "billing_doc"},
-
-                {"id": "k5", "label": "Batch", "agg": "unique", "source": "batch"},
-
-                {"id": "k6", "label": "Net Value", "agg": "sum", "source": "net_value", "format": "currency"}
-            ],
-
-            "filters": [
-
-                {"id": "f1", "label": "Material", "source": "material"},
-
-                {"id": "f2", "label": "Billing Type", "source": "billing_type"},
-
-                {"id": "f3", "label": "Combined String", "source": "combined"},
-
-                {"id": "f4", "label": "Created On", "source": "date"}
-            ],
-
-            "charts": [
-
-                {"id": "c1", "type": "bar", "x": "material", "y": "shelf_life", "agg": "sum", "title": get_chart_title("Material", "Shelf Life")},
-
-                {"id": "c2", "type": "doughnut", "x": "billing_doc", "y": "net_value", "agg": "sum", "title": get_chart_title("Billing Doc", "Net Value")},
-
-                {"id": "c3", "type": "bar", "x": "sales_doc", "y": "shelf_life", "agg": "sum", "horizontal": True, "title": get_chart_title("Sales Document", "Shelf Life")},
-
-                {"id": "c4", "type": "pie", "x": "billing_type", "y": "net_value", "agg": "sum", "title": get_chart_title("Billing Type", "Net Value")}
-            ]
-        }
+        {"id": "1", "label": "Exception 01", "title": get_exception_title("Exception 01")},
+        {"id": "2", "label": "Exception 02", "title": get_exception_title("Exception 02")},
+        {"id": "3", "label": "Exception 03", "title": get_exception_title("Exception 03")}
     ],
 
     "columns": {
+        "exception_type": ["Exception Type"],
 
         "company": ["Company Code"],
 
@@ -99,16 +58,11 @@ def meta():
 
 
 def get_data(exc_id):
-
-    path = rf"D:\off\JKC Dashboard\output\CJSA26_Exception{int(exc_id):02}.csv"
-
-    if not os.path.exists(path):
-
-        return None
-
-    return pd.read_csv(
-        path,
-        encoding='latin1',
-        low_memory=False
-    ).fillna('')
-
+    paths = [
+        rf"data_files/CJSA26_Exception{int(exc_id):02}.csv",
+        rf"data_files/CJSA26_Exception{int(exc_id)}.csv"
+    ]
+    path = next((p for p in paths if os.path.exists(p)), None)
+    if path:
+        return pd.read_csv(path, encoding='latin1', low_memory=False).fillna('')
+    return None

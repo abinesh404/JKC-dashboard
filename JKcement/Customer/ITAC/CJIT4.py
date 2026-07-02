@@ -18,7 +18,7 @@ CONFIG = {
         {
             "id": "1",
 
-            "label": "Exception 01",
+            "label": "All Exceptions",
 
             "title": get_exception_title("Credit note > invoice value"),
 
@@ -38,6 +38,7 @@ CONFIG = {
             ],
 
             "filters": [
+                {"id": "f_extype", "label": "Exception Type", "source": "exception_type"},
 
                 {"id": "f1", "label": "Table Name", "source": "table"},
 
@@ -60,6 +61,7 @@ CONFIG = {
     ],
 
     "columns": {
+        "exception_type": ["Exception Type"],
 
         "table": ["TableName"],
 
@@ -85,16 +87,25 @@ def meta():
 
 
 def get_data(exc_id):
-
-    path = rf"D:\off\JKC Dashboard\output\CJIT04_Exception{int(exc_id):02}.csv"
-
-    if not os.path.exists(path):
-
+    insight_id = CONFIG["id"]
+    import re
+    m = re.search(r'([A-Za-z]+)(\d+)', insight_id)
+    padded_id = f"{m.group(1)}0{m.group(2)}" if m and len(m.group(2)) == 1 else insight_id
+    merged_df = pd.DataFrame()
+    file_found = False
+    for i in range(1, 10):
+        paths = [
+            f"data_files/{insight_id}_Exception0{i}.csv",
+            f"data_files/{insight_id}_Exception{i}.csv",
+            f"data_files/{padded_id}_Exception0{i}.csv",
+            f"data_files/{padded_id}_Exception{i}.csv"
+        ]
+        path = next((p for p in paths if os.path.exists(p)), None)
+        if path:
+            file_found = True
+            df = pd.read_csv(path, encoding='latin1', low_memory=False).fillna('')
+            df['Exception Type'] = f"Exception {i}"
+            merged_df = pd.concat([merged_df, df], ignore_index=True)
+    if not file_found:
         return None
-
-    return pd.read_csv(
-        path,
-        encoding='latin1',
-        low_memory=False
-    ).fillna('')
-
+    return merged_df

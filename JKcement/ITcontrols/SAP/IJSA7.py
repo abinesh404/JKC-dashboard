@@ -8,8 +8,9 @@ from .template import get_chart_title, get_exception_title
 CONFIG = {
     "id": "IJSA7",
     "name": "Configuration of Document Type in SAP",
-    "active_exceptions": [{"id": "1", "label": "Exception 01", "title": get_exception_title("Exception 01")}],
+    "active_exceptions": [{"id": "1", "label": "All Exceptions", "title": get_exception_title("Exception 01")}],
     "columns": {
+        "exception_type": ["Exception Type"],
         "user": ["User Name","User ID","Changed By","Created By"],
         "tcode": ["Transaction Code","TCode","Authorization Object"],
         "date": ["Change Date","Date","Created On","Last Changed On"],
@@ -25,6 +26,7 @@ CONFIG = {
         {"id": "k6", "label": "Issue Count", "agg": "row_count"}
     ],
     "filters": [
+                {"id": "f_extype", "label": "Exception Type", "source": "exception_type"},
         {"id": "f1", "label": "Companies", "source": "company"},
         {"id": "f2", "label": "Users", "source": "user"},
         {"id": "f3", "label": "T-Codes", "source": "tcode"}
@@ -42,10 +44,16 @@ def meta():
     return {"id": CONFIG["id"], "name": CONFIG["name"], "category": "SAP"}
 
 def get_data(exc_id):
-    paths = [
-        rf"D:\off\JKC Dashboard\output\IJSA7_Exception{int(exc_id):02}.csv"
-    ]
-    path = next((p for p in paths if os.path.exists(p)), None)
-    if path:
-        return pd.read_csv(path, encoding='latin1', low_memory=False).fillna('')
-    return None
+    insight_id = CONFIG["id"]
+    merged_df = pd.DataFrame()
+    for i in range(1, 10):
+        path1 = f"data_files/{insight_id}_Exception0{i}.csv"
+        path2 = f"data_files/{insight_id}_Exception{i}.csv"
+        path = next((p for p in [path1, path2] if os.path.exists(p)), None)
+        if path:
+            df = pd.read_csv(path, encoding='latin1', low_memory=False).fillna('')
+            df['Exception Type'] = f"Exception {i}"
+            merged_df = pd.concat([merged_df, df], ignore_index=True)
+    if merged_df.empty:
+        return None
+    return merged_df

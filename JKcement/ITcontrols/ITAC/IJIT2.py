@@ -8,7 +8,7 @@ CONFIG = {
     "active_exceptions": [
         {
             "id": "1",
-            "label": "Exception 01",
+            "label": "All Exceptions",
             "title": "Unauthorized Changes to Tolerance Limits",
             "cards": [
                 {"id": "k1", "label": "Tolerance Changes", "agg": "unique", "source": "change_doc_number"},
@@ -19,6 +19,7 @@ CONFIG = {
                 {"id": "k6", "label": "High Risk Changes", "agg": "unique", "source": "high_risk_change"}
             ],
             "filters": [
+                {"id": "f_extype", "label": "Exception Type", "source": "exception_type"},
                 {"id": "f1", "label": "User", "source": "user", "all_label": "All Users"},
                 {"id": "f2", "label": "Transaction Code", "source": "transaction_code", "all_label": "All T-Codes"},
                 {"id": "f3", "label": "Table Name", "source": "table_name", "all_label": "All Tables"}
@@ -68,6 +69,7 @@ CONFIG = {
         }
     ],
     "columns": {
+        "exception_type": ["Exception Type"],
         "user": ["User"],
         "transaction_code": ["Transaction Code"],
         "table_name": ["Table Name"],
@@ -89,54 +91,16 @@ def meta():
     }
 
 def get_data(exc_id):
-    paths = [
-        rf"D:\off\JKC Dashboard\output\IJIT2_Exception{int(exc_id):02}.csv",
-        rf"data_files/IJIT2_Exception{int(exc_id):02}.csv"
-    ]
-    path = next((p for p in paths if os.path.exists(p)), None)
-    if not path:
+    insight_id = CONFIG["id"]
+    merged_df = pd.DataFrame()
+    for i in range(1, 10):
+        path1 = f"data_files/{insight_id}_Exception0{i}.csv"
+        path2 = f"data_files/{insight_id}_Exception{i}.csv"
+        path = next((p for p in [path1, path2] if os.path.exists(p)), None)
+        if path:
+            df = pd.read_csv(path, encoding='latin1', low_memory=False).fillna('')
+            df['Exception Type'] = f"Exception {i}"
+            merged_df = pd.concat([merged_df, df], ignore_index=True)
+    if merged_df.empty:
         return None
-        
-    df = pd.read_csv(path, encoding='latin1', low_memory=False)
-    df.columns = [str(c).strip() for c in df.columns]
-    
-    # Rename fields to match Suggested Column Mapping exactly
-    rename_map = {
-        "Table key": "Table Key",
-        "Field Name changed": "Field Name Changed",
-        "VERSION": "Version"
-    }
-    df = df.rename(columns=rename_map)
-    
-    # Ensure all required standard columns exist
-    required_cols = [
-        "Change Document Number", "Change Indicator", "Change Date", "Change Time", "Planned Change Number",
-        "OBJECTCLAS", "OBJECTID", "Table Name", "Table Key", "Field Name Changed", "Version",
-        "User", "Transaction Code", "Language Key"
-    ]
-    for col in required_cols:
-        if col not in df.columns:
-            df[col] = ""
-            
-    # Check if change is critical/high-risk
-    def is_high_risk(table, field):
-        t_str = str(table).strip().upper() if pd.notna(table) else ""
-        f_str = str(field).strip().upper() if pd.notna(field) else ""
-        critical_tables = ["T169G", "T043G", "T043T", "T169F", "T169V", "T030"]
-        critical_fields = ["TOLERANCE", "LIMIT", "VALUE", "PERCENT", "MAX", "MIN", "AMOUNT"]
-        return t_str in critical_tables or any(x in f_str for x in critical_fields)
-
-    # Build KPI helper for High Risk Changes
-    high_risk = []
-    for idx, row in df.iterrows():
-        tbl = row.get("Table Name", "")
-        fld = row.get("Field Name Changed", "")
-        chg_num = str(row.get("Change Document Number", "")).strip()
-        if is_high_risk(tbl, fld) and chg_num:
-            high_risk.append(chg_num)
-        else:
-            high_risk.append("")
-            
-    df["High Risk Change"] = high_risk
-    
-    return df.fillna('')
+    return merged_df

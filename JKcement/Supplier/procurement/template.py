@@ -391,6 +391,27 @@ def get_html():
     </div>
 
 <script>
+        const defaultCards = [
+            { id: 'k-comp', label: 'Companies', agg: 'unique', source: 'company' },
+            { id: 'k-vend', label: 'Vendors', agg: 'unique', source: 'vendor' },
+            { id: 'k-rec', label: 'Records', agg: 'row_count' },
+            { id: 'k-val', label: 'Total Value', agg: 'total_value', source: 'amount', format: 'currency' },
+            { id: 'k-days', label: 'Avg Days', agg: 'avg', source: 'days' },
+            { id: 'k-issues', label: 'Critical Issues', agg: 'row_count' }
+        ];
+        const defaultFilters = [
+            { id: 'sel-comp', label: 'Company', source: 'company' },
+            { id: 'sel-vend', label: 'Vendor', source: 'vendor' },
+            { id: 'sel-city', label: 'City', source: 'city' }
+        ];
+        const defaultCharts = [
+            { id: 'chartPie', type: 'pie', x: 'vendor', agg: 'count', top_n: 5, title: 'TOP 5 VENDORS (RECORD COUNT)', legend: true },
+            { id: 'chartBar', type: 'bar', x: 'company', agg: 'count', top_n: 10, horizontal: true, title: 'TOP 10 COMPANIES (RECORD COUNT)' },
+            { id: 'chartLine', type: 'line', x: 'date', agg: 'count', time_group: 'month', title: 'MONTHLY ACTIVITY TREND' },
+            { id: 'chartDonut', type: 'doughnut', x: 'account_group', agg: 'count', title: 'ACCOUNT GROUP DISTRIBUTION', legend: true },
+            { id: 'chartCol', type: 'bar', x: 'city', agg: 'count', top_n: 10, title: 'TOP 10 CITIES (RECORD COUNT)' }
+        ];
+
 const CONFIGS = {{ configs|safe }};
 const CC = ['#052659', '#315C8E', '#5483B3', '#7DA0CA', '#9BBCE0', '#C1E8FF', '#A0C4FF'];
 let rawD = [], rawC = [], filteredD = [];
@@ -654,9 +675,9 @@ function selObj(id, name, el) {
     
     // Initial UI build from first exception or defaults
     const eObj = aCfg.active_exceptions?.[0] || {};
-    curExcFilters = eObj.filters || aCfg.filters || [];
-    curExcCards = eObj.cards || aCfg.cards || [];
-    curExcCharts = eObj.charts || aCfg.charts || [];
+    curExcFilters = eObj.filters || aCfg.filters || defaultFilters;
+    curExcCards = eObj.cards || aCfg.cards || defaultCards;
+    curExcCharts = eObj.charts || aCfg.charts || defaultCharts;
     buildKPIs(curExcCards); 
     buildSlicers(curExcFilters); 
     buildChartBoxes(curExcCharts);
@@ -670,9 +691,9 @@ function selExc(ex) {
     const eObj = (aCfg.active_exceptions || []).find(e => e.id == ex);
     if (eObj) {
         $('#exc-title').text(eObj.title || '');
-        curExcFilters = eObj.filters || aCfg.filters || [];
-        curExcCards = eObj.cards || aCfg.cards || [];
-        curExcCharts = eObj.charts || aCfg.charts || [];
+        curExcFilters = eObj.filters || aCfg.filters || defaultFilters;
+        curExcCards = eObj.cards || aCfg.cards || defaultCards;
+        curExcCharts = eObj.charts || aCfg.charts || defaultCharts;
         buildKPIs(curExcCards); 
         buildSlicers(curExcFilters); 
         buildChartBoxes(curExcCharts);

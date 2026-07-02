@@ -8,7 +8,7 @@ CONFIG = {
     "active_exceptions": [
         {
             "id": "1",
-            "label": "Exception 01",
+            "label": "All Exceptions",
             "title": "GST Duplicate Invoices",
             "cards": [
                 {"id": "k1", "label": "Duplicate GST Invoices", "agg": "unique", "source": "doc_no"},
@@ -19,6 +19,7 @@ CONFIG = {
                 {"id": "k6", "label": "Open Duplicate Invoices", "agg": "unique", "source": "open_dup_invoices"}
             ],
             "filters": [
+                {"id": "f_extype", "label": "Exception Type", "source": "exception_type"},
                 {"id": "f1", "label": "Fiscal Year", "source": "fiscal_year", "all_label": "All Years"},
                 {"id": "f2", "label": "User Name", "source": "user_name", "all_label": "All Users"},
                 {"id": "f3", "label": "Currency", "source": "currency", "all_label": "All Currencies"},
@@ -67,6 +68,7 @@ CONFIG = {
         }
     ],
     "columns": {
+        "exception_type": ["Exception Type"],
         "fiscal_year": ["Fiscal Year"],
         "user_name": ["User Name"],
         "currency": ["currency"],
@@ -92,74 +94,16 @@ def meta():
     }
 
 def get_data(exc_id):
-    paths = [
-        rf"D:\off\JKC Dashboard\output\TJGS4_Exception{int(exc_id):02}.csv",
-        rf"data_files/TJGS4_Exception{int(exc_id):02}.csv"
-    ]
-    path = next((p for p in paths if os.path.exists(p)), None)
-    if not path:
+    insight_id = CONFIG["id"]
+    merged_df = pd.DataFrame()
+    for i in range(1, 10):
+        path1 = f"data_files/{insight_id}_Exception0{i}.csv"
+        path2 = f"data_files/{insight_id}_Exception{i}.csv"
+        path = next((p for p in [path1, path2] if os.path.exists(p)), None)
+        if path:
+            df = pd.read_csv(path, encoding='latin1', low_memory=False).fillna('')
+            df['Exception Type'] = f"Exception {i}"
+            merged_df = pd.concat([merged_df, df], ignore_index=True)
+    if merged_df.empty:
         return None
-        
-    df = pd.read_csv(path, encoding='latin1', low_memory=False)
-    df.columns = [str(c).strip() for c in df.columns]
-    
-    # Rename columns to standard schema
-    rename_map = {
-        "Doc No": "Doc No",
-        "Document Header Text": "Document Header Text",
-        "Purch.Doc.": "Purch.Doc.",
-        "Grouping Key": "Grouping Key",
-        "Object key": "Object key",
-        "Type": "Type",
-        "Period": "Period",
-        "Parked By": "Parked By",
-        "Doc..Date": "Doc..Date",
-        "Pstng Date": "Pstng Date",
-        "Entry Date": "Entry Date",
-        "Time": "Time",
-        "Rec Ent Doc": "Rec Ent Doc",
-        "Rec Co Code": "Rec Co Code",
-        "Rec Year": "Rec Year",
-        "Exch. rate": "Exch. rate",
-        "Reversal_": "Reversal_",
-        "Reason": "Reason",
-        "Revers. Dte": "Revers. Dte",
-        "User Name": "User Name",
-        "currency": "currency",
-        "Reference": "Reference",
-        "Reversal": "Reversal",
-        "Rve": "Rve",
-        "RvD": "RvD",
-        "Reversal Flag": "Reversal Flag",
-        "Days_Difference": "Days_Difference",
-        "Rev. Org.": "Rev. Org.",
-        "Rev. Ref.": "Rev. Ref.",
-        "Fiscal Year": "Fiscal Year"
-    }
-    df = df.rename(columns=rename_map)
-    
-    # Ensure all required standard columns exist
-    for col in rename_map.values():
-        if col not in df.columns:
-            df[col] = ""
-            
-    df["Amount"] = 0.0
-    
-    # Calculate reversed/open duplicate helpers
-    rev_dup = []
-    open_dup = []
-    for idx, row in df.iterrows():
-        doc = str(row.get("Doc No", "")).strip()
-        flag = str(row.get("Reversal Flag", "")).strip().lower()
-        
-        if flag == "yes":
-            rev_dup.append(doc)
-            open_dup.append("")
-        else:
-            rev_dup.append("")
-            open_dup.append(doc)
-            
-    df["Reversed Dup Invoices"] = rev_dup
-    df["Open Dup Invoices"] = open_dup
-    
-    return df.fillna('')
+    return merged_df

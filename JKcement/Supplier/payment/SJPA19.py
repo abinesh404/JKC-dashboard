@@ -7,100 +7,10 @@ CONFIG = {
     "id": "SJPA19",
     "name": "Payee Name in Cheque Payments is Different from Vendor Name or Alternate Payee",
     "active_exceptions": [
-        {
-            "id": "1",
-            "label": "Exception 01",
-            "title": get_exception_title("Payee Name Does Not Match Vendor Name or Alternate Payee"),
-            "cards": [
-                {
-                    "id": "k1",
-                    "label": "Companies",
-                    "agg": "unique",
-                    "source": "company"
-                },
-                {
-                    "id": "k2",
-                    "label": "Vendors",
-                    "agg": "unique",
-                    "source": "vendor"
-                },
-                {
-                    "id": "k3",
-                    "label": "Customers",
-                    "agg": "unique",
-                    "source": "customer"
-                },
-                {
-                    "id": "k4",
-                    "label": "Cheque Payments",
-                    "agg": "total_rows"
-                },
-                {
-                    "id": "k5",
-                    "label": "Total Payment Amount",
-                    "agg": "total_value",
-                    "source": "amount",
-                    "format": "currency"
-                },
-                {
-                    "id": "k6",
-                    "label": "Name Mismatch Exceptions",
-                    "agg": "total_rows"
-                }
-            ],
-            "filters": [
-                {"id": "f1", "label": "Company", "source": "company"},
-                {"id": "f2", "label": "Vendor", "source": "vendor"},
-                {"id": "f3", "label": "Customer", "source": "customer"},
-                {"id": "f4", "label": "Creation User", "source": "user"}
-            ],
-            "charts": [
-                {
-                    "id": "c1",
-                    "type": "pie",
-                    "x": "vendor",
-                    "y": "amount",
-                    "agg": "sum",
-                    "top_n": 5,
-                    "title": "Top 5 Vendors with Payee Name Mismatches"
-                },
-                {
-                    "id": "c2",
-                    "type": "bar",
-                    "x": "company",
-                    "y": "amount",
-                    "agg": "sum",
-                    "top_n": 10,
-                    "horizontal": True,
-                    "title": "Top 10 Companies by Mismatch Amount"
-                },
-                {
-                    "id": "c3",
-                    "type": "line",
-                    "x": "date",
-                    "agg": "count",
-                    "time_group": "month",
-                    "title": "Monthly Cheque Payment Exception Trend"
-                },
-                {
-                    "id": "c4",
-                    "type": "doughnut",
-                    "x": "company",
-                    "y": "amount",
-                    "agg": "sum",
-                    "title": "Company-wise Payment Distribution"
-                },
-                {
-                    "id": "c5",
-                    "type": "bar",
-                    "x": "user",
-                    "agg": "count",
-                    "title": "Top Creation Users by Exception Count"
-                }
-            ]
-        }
+        {"id": "1", "label": "Exception 01", "title": get_exception_title("Exception 01")}
     ],
     "columns": {
+        "exception_type": ["Exception Type"],
         "company": [
             "Company Code",
             "Company Name",
@@ -166,10 +76,10 @@ def meta():
 
 def get_data(exc_id):
     paths = [
-        f"data_files/SJPA19_Exception0{exc_id}.csv",
-        f"data_files/SJPA19_Exception{exc_id}.csv"
+        rf"data_files/SJPA19_Exception{int(exc_id):02}.csv",
+        rf"data_files/SJPA19_Exception{int(exc_id)}.csv"
     ]
     path = next((p for p in paths if os.path.exists(p)), None)
-    if not path:
-        return None
-    return pd.read_csv(path, encoding='latin1', low_memory=False).fillna('')
+    if path:
+        return pd.read_csv(path, encoding='latin1', low_memory=False).fillna('')
+    return None

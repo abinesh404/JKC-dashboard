@@ -8,7 +8,7 @@ CONFIG = {
     "active_exceptions": [
         {
             "id": "1",
-            "label": "Exception 01",
+            "label": "All Exceptions",
             "title": "Direct Changes to SAP Tables",
             "cards": [
                 {"id": "k1", "label": "Direct Table Changes", "agg": "unique", "source": "change_number"},
@@ -19,6 +19,7 @@ CONFIG = {
                 {"id": "k6", "label": "High Risk Changes", "agg": "unique", "source": "high_risk_change"}
             ],
             "filters": [
+                {"id": "f_extype", "label": "Exception Type", "source": "exception_type"},
                 {"id": "f1", "label": "Client Number", "source": "client_number", "all_label": "All Clients"},
                 {"id": "f2", "label": "User Name", "source": "user_name", "all_label": "All Users"},
                 {"id": "f3", "label": "Table Name", "source": "table_name", "all_label": "All Tables"}
@@ -69,6 +70,7 @@ CONFIG = {
         }
     ],
     "columns": {
+        "exception_type": ["Exception Type"],
         "client_number": ["Client Number"],
         "user_name": ["User Name"],
         "table_name": ["Table Name"],
@@ -90,54 +92,25 @@ def meta():
     }
 
 def get_data(exc_id):
-    paths = [
-        rf"D:\off\JKC Dashboard\output\IJSA05_Exception01.csv",
-        rf"D:\off\JKC Dashboard\output\IJSA5_Exception{int(exc_id):02}.csv",
-        rf"data_files/IJSA05_Exception01.csv",
-        rf"data_files/IJSA5_Exception{int(exc_id):02}.csv"
-    ]
-    path = next((p for p in paths if os.path.exists(p)), None)
-    if not path:
-        return None
-        
-    df = pd.read_csv(path, encoding='latin1', low_memory=False)
-    df.columns = [str(c).strip() for c in df.columns]
-    
-    # Rename UserName to User Name to standardise
-    if "UserName" in df.columns:
-        df = df.rename(columns={"UserName": "User Name"})
-        
-    # Ensure standard columns are present
-    required_cols = [
-        "Client Name", "Client Number", "Change Number", "Object Class", "Object ID",
-        "User Name", "Date of Change", "Time of Change", "Old Value", "New Value",
-        "Table Name", "Field Name"
-    ]
-    for col in required_cols:
-        if col not in df.columns:
-            df[col] = ""
-            
-    # Check if table is critical/high-risk
-    def is_high_risk(table):
-        if pd.isna(table) or table == "":
-            return False
-        t_str = str(table).strip().upper()
-        critical_tables = [
-            "USR02", "T000", "AGR_USERS", "PA0008", "V_T000", "TABLOG", "DBTABLOG", 
-            "PROT", "CDHDR", "CDPOS", "RFBLG", "BSEG", "BKPF"
+    insight_id = CONFIG["id"]
+    import re
+    m = re.search(r'([A-Za-z]+)(\d+)', insight_id)
+    padded_id = f"{m.group(1)}0{m.group(2)}" if m and len(m.group(2)) == 1 else insight_id
+    merged_df = pd.DataFrame()
+    file_found = False
+    for i in range(1, 10):
+        paths = [
+            f"data_files/{insight_id}_Exception0{i}.csv",
+            f"data_files/{insight_id}_Exception{i}.csv",
+            f"data_files/{padded_id}_Exception0{i}.csv",
+            f"data_files/{padded_id}_Exception{i}.csv"
         ]
-        return t_str in critical_tables or any(x in t_str for x in ["USER", "AUTH", "PASS", "SALARY", "PAYROLL"])
-
-    # Build KPI helper for High Risk Changes
-    high_risk = []
-    for idx, row in df.iterrows():
-        tbl = row.get("Table Name", "")
-        chg_num = str(row.get("Change Number", "")).strip()
-        if is_high_risk(tbl) and chg_num:
-            high_risk.append(chg_num)
-        else:
-            high_risk.append("")
-            
-    df["High Risk Change"] = high_risk
-    
-    return df.fillna('')
+        path = next((p for p in paths if os.path.exists(p)), None)
+        if path:
+            file_found = True
+            df = pd.read_csv(path, encoding='latin1', low_memory=False).fillna('')
+            df['Exception Type'] = f"Exception {i}"
+            merged_df = pd.concat([merged_df, df], ignore_index=True)
+    if not file_found:
+        return None
+    return merged_df

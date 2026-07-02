@@ -15,54 +15,11 @@ CONFIG = {
     "name": "Sale price",
 
     "active_exceptions": [
-
-        {
-            "id": "1",
-
-            "label": "Exception 01",
-
-            "title": get_exception_title("Sale price"),
-
-            "cards": [
-
-                {"id": "k1", "label": "Company Name", "agg": "unique", "source": "company"},
-
-                {"id": "k2", "label": "Plant", "agg": "unique", "source": "plant"},
-
-                {"id": "k3", "label": "Material Number", "agg": "unique", "source": "material"},
-
-                {"id": "k4", "label": "Customer", "agg": "unique", "source": "customer"},
-
-                {"id": "k5", "label": "Billing Document", "agg": "unique", "source": "billing_doc"},
-
-                {"id": "k6", "label": "Impact", "agg": "sum", "source": "impact", "format": "currency"}
-            ],
-
-            "filters": [
-
-                {"id": "f1", "label": "Company Name", "source": "company"},
-
-                {"id": "f2", "label": "Material Description", "source": "material_desc"},
-
-                {"id": "f3", "label": "Sold to Party Name", "source": "customer_name"},
-
-                {"id": "f4", "label": "Created On", "source": "date"}
-            ],
-
-            "charts": [
-
-                {"id": "c1", "type": "bar", "x": "sd_type", "y": "billing_doc", "agg": "count", "title": get_chart_title("SD Type", "Billing Docs")},
-
-                {"id": "c2", "type": "line", "x": "date", "y": "impact", "agg": "sum", "time_group": "month", "title": get_chart_title("Created On", "Impact Trend")},
-
-                {"id": "c3", "type": "bar", "x": "material_desc", "y": "impact", "agg": "sum", "horizontal": True, "top_n": 10, "title": get_chart_title("Material", "Impact")},
-
-                {"id": "c4", "type": "pie", "x": "billing_type", "y": "billing_doc", "agg": "count", "title": get_chart_title("Billing Type", "Billing Docs")}
-            ]
-        }
+        {"id": "1", "label": "Exception 01", "title": get_exception_title("Exception 01")}
     ],
 
     "columns": {
+        "exception_type": ["Exception Type"],
 
         "company": ["Company Name"],
 
@@ -100,16 +57,11 @@ def meta():
 
 
 def get_data(exc_id):
-
-    path = rf"D:\off\JKC Dashboard\output\CJSA21_Exception{int(exc_id):02}.csv"
-
-    if not os.path.exists(path):
-
-        return None
-
-    return pd.read_csv(
-        path,
-        encoding='latin1',
-        low_memory=False
-    ).fillna('')
-
+    paths = [
+        rf"data_files/CJSA21_Exception{int(exc_id):02}.csv",
+        rf"data_files/CJSA21_Exception{int(exc_id)}.csv"
+    ]
+    path = next((p for p in paths if os.path.exists(p)), None)
+    if path:
+        return pd.read_csv(path, encoding='latin1', low_memory=False).fillna('')
+    return None

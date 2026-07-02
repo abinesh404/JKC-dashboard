@@ -8,7 +8,7 @@ CONFIG = {
     "active_exceptions": [
         {
             "id": "1",
-            "label": "Exception 01",
+            "label": "All Exceptions",
             "title": "Cases Where the Customer is Active but Has No Reconciliation Account Defined",
             "cards": [
                 {"id": "k1", "label": "Customers Without Recon Account", "agg": "unique", "source": "customer_number"},
@@ -19,6 +19,7 @@ CONFIG = {
                 {"id": "k6", "label": "High Risk Customers", "agg": "unique", "source": "high_risk_customer_id"}
             ],
             "filters": [
+                {"id": "f_extype", "label": "Exception Type", "source": "exception_type"},
                 {"id": "f1", "label": "Company Code", "source": "company_code", "all_label": "All Companies"},
                 {"id": "f2", "label": "Customer Number", "source": "customer_number", "all_label": "All Customers"},
                 {"id": "f3", "label": "Region", "source": "region", "all_label": "All Regions"},
@@ -68,6 +69,7 @@ CONFIG = {
         }
     ],
     "columns": {
+        "exception_type": ["Exception Type"],
         "company_code": ["Company Code"],
         "customer_number": ["Customer Number"],
         "region": ["Region"],
@@ -92,80 +94,16 @@ def meta():
     }
 
 def get_data(exc_id):
-    paths = [
-        rf"D:\off\JKC Dashboard\output\TJMA5_Exception{int(exc_id):02}.csv",
-        rf"data_files/TJMA5_Exception{int(exc_id):02}.csv"
-    ]
-    path = next((p for p in paths if os.path.exists(p)), None)
-    if not path:
+    insight_id = CONFIG["id"]
+    merged_df = pd.DataFrame()
+    for i in range(1, 10):
+        path1 = f"data_files/{insight_id}_Exception0{i}.csv"
+        path2 = f"data_files/{insight_id}_Exception{i}.csv"
+        path = next((p for p in [path1, path2] if os.path.exists(p)), None)
+        if path:
+            df = pd.read_csv(path, encoding='latin1', low_memory=False).fillna('')
+            df['Exception Type'] = f"Exception {i}"
+            merged_df = pd.concat([merged_df, df], ignore_index=True)
+    if merged_df.empty:
         return None
-        
-    df = pd.read_csv(path, encoding='latin1', low_memory=False)
-    df.columns = [str(c).strip() for c in df.columns]
-    
-    # Rename columns to standard schema
-    rename_map = {
-        "Customer Number": "Customer Number",
-        "Company Code": "Company Code",
-        "Name of Person Created  Object": "Name of Person Created  Object",
-        "Date on Record Created": "Date on Record Created",
-        "Central posting block": "Central posting block",
-        "Deletion Flag for Master Record": "Deletion Flag for Master Record",
-        "Reconciliation Account in General Ledger": "Reconciliation Account in General Ledger",
-        "Block Key for Payment": "Block Key for Payment",
-        "Terms of Payment Key": "Terms of Payment Key",
-        "Name1": "Name1",
-        "City": "City",
-        "Region": "Region",
-        "Account Number of Vendor": "Account Number of Vendor",
-        "Tax Number 1": "Tax Number 1",
-        "VAT Registration Number": "VAT Registration Number",
-        "Document Number of the Clearing Document": "Document Number of the Clearing Document",
-        "Fiscal Year": "Fiscal Year",
-        "Accounting Document Number": "Accounting Document Number",
-        "Num. Line Item Within Acc. Doc.": "Num. Line Item Within Acc. Doc.",
-        "Posting Date in the Document": "Posting Date in the Document",
-        "Document Date in Document": "Document Date in Document",
-        "Day Accounting Document Entered": "Day Accounting Document Entered",
-        "Currency Key": "Currency Key",
-        "Reference Document Number": "Reference Document Number",
-        "Document Type": "Document Type",
-        "Debit/Credit Indicator": "Debit/Credit Indicator",
-        "Amount in Local Currency": "Amount in Local Currency",
-        "General Ledger Account": "General Ledger Account",
-        "Payment Block Key": "Payment Block Key",
-        "Document Status": "Document Status"
-    }
-    df = df.rename(columns=rename_map)
-    
-    # Ensure all required standard columns exist
-    for col in rename_map.values():
-        if col not in df.columns:
-            df[col] = 0.0 if "Amount" in col else ""
-            
-    # Calculate active and high risk helper columns
-    active_custs = []
-    high_risk_custs = []
-    
-    for idx, row in df.iterrows():
-        cust = str(row.get("Customer Number", "")).strip()
-        block = str(row.get("Central posting block", "")).strip()
-        delflag = str(row.get("Deletion Flag for Master Record", "")).strip()
-        acct_doc = str(row.get("Accounting Document Number", "")).strip()
-        
-        # Active: block and delflag are blank
-        if not block and not delflag:
-            active_custs.append(cust)
-        else:
-            active_custs.append("")
-            
-        # High Risk: Has transactions (accounting doc exists) but missing reconciliation account (all here are missing)
-        if acct_doc:
-            high_risk_custs.append(cust)
-        else:
-            high_risk_custs.append("")
-            
-    df["Active Customer ID"] = active_custs
-    df["High Risk Customer ID"] = high_risk_custs
-    
-    return df.fillna('')
+    return merged_df

@@ -14,54 +14,11 @@ CONFIG = {
     "name": "Unblocked duplicate customers",
 
     "active_exceptions": [
-
-        {
-            "id": "1",
-
-            "label": "Exception 01",
-
-            "title": get_exception_title("Unblocked duplicate customers"),
-
-            "cards": [
-
-                {"id": "k1", "label": "Company Code", "agg": "unique", "source": "company"},
-
-                {"id": "k2", "label": "Customer Code", "agg": "unique", "source": "customer"},
-
-                {"id": "k3", "label": "PAN", "agg": "unique", "source": "pan"},
-
-                {"id": "k4", "label": "Region", "agg": "unique", "source": "region"},
-
-                {"id": "k5", "label": "Country", "agg": "unique", "source": "country"},
-
-                {"id": "k6", "label": "Balance", "agg": "sum", "source": "amount", "format": "currency"}
-            ],
-
-            "filters": [
-
-                {"id": "f1", "label": "Name", "source": "name"},
-
-                {"id": "f2", "label": "Postal Code", "source": "postal_code"},
-
-                {"id": "f3", "label": "Duplicate Details", "source": "duplicate_details"}
-            ],
-
-            "charts": [
-
-                {"id": "c1", "type": "bar", "x": "name", "y": "duplicate_count", "agg": "sum", "top_n": 10, "title": get_chart_title("Name", "Duplicate Count")},
-
-                {"id": "c2", "type": "doughnut", "x": "company", "y": "amount", "agg": "sum", "title": get_chart_title("Company Code", "Balance")},
-
-                {"id": "c3", "type": "line", "x": "date", "y": "amount", "agg": "sum", "time_group": "month", "title": get_chart_title("Balance Date", "Balance Trend")},
-
-                {"id": "c4", "type": "pie", "x": "customer", "agg": "count", "title": get_chart_title("Customer Code", "Region Distribution")},
-
-                {"id": "c5", "type": "bar", "x": "name", "y": "amount", "agg": "sum", "top_n": 10, "title": get_chart_title("Name", "Balance")}
-            ]
-        }
+        {"id": "1", "label": "Exception 01", "title": get_exception_title("Exception 01")}
     ],
 
     "columns": {
+        "exception_type": ["Exception Type"],
 
         "company": ["Company Code"],
 
@@ -99,16 +56,11 @@ def meta():
 
 
 def get_data(exc_id):
-
-    path = rf"D:\off\JKC Dashboard\output\CJMA19_Exception{int(exc_id):02}.csv"
-
-    if not os.path.exists(path):
-
-        return None
-
-    return pd.read_csv(
-        path,
-        encoding='latin1',
-        low_memory=False
-    ).fillna('')
-
+    paths = [
+        rf"data_files/CJMA19_Exception{int(exc_id):02}.csv",
+        rf"data_files/CJMA19_Exception{int(exc_id)}.csv"
+    ]
+    path = next((p for p in paths if os.path.exists(p)), None)
+    if path:
+        return pd.read_csv(path, encoding='latin1', low_memory=False).fillna('')
+    return None

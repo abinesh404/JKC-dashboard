@@ -14,52 +14,11 @@ CONFIG = {
     "name": "Sales return Qty in excess of sales qty - Batch Level/same customer",
 
     "active_exceptions": [
-
-        {
-            "id": "1",
-
-            "label": "Exception 01",
-
-            "title": get_exception_title("Sales return Qty in excess of sales qty - Batch Level/same customer"),
-
-            "cards": [
-
-                {"id": "k1", "label": "Company Code", "agg": "unique", "source": "company"},
-
-                {"id": "k2", "label": "Material Number", "agg": "unique", "source": "material"},
-
-                {"id": "k3", "label": "Batch No", "agg": "unique", "source": "batch"},
-
-                {"id": "k4", "label": "Plant Code", "agg": "unique", "source": "plant"},
-
-                {"id": "k5", "label": "Total Sales Qty", "agg": "sum", "source": "sales_qty"},
-
-                {"id": "k6", "label": "Total Return Qty", "agg": "sum", "source": "return_qty"}
-            ],
-
-            "filters": [
-
-                {"id": "f1", "label": "Company Name", "source": "company_name"},
-
-                {"id": "f2", "label": "Qty Difference", "source": "qty_diff"},
-
-                {"id": "f3", "label": "Material Description", "source": "material_desc"},
-
-                {"id": "f4", "label": "Plant Code", "source": "plant"}
-            ],
-
-            "charts": [
-
-                {"id": "c1", "type": "bar", "x": "material_desc", "y": "sales_qty", "agg": "sum", "title": get_chart_title("Material", "Sales Qty")},
-
-                {"id": "c2", "type": "pie", "x": "plant", "y": "return_qty", "agg": "sum", "title": get_chart_title("Plant", "Return Qty")},
-
-                {"id": "c3", "type": "bar", "x": "plant_name", "y": "qty_diff", "agg": "sum", "horizontal": True, "title": get_chart_title("Plant", "Qty Difference")}
-            ]
-        }
+        {"id": "1", "label": "Exception 01", "title": get_exception_title("Exception 01")}
     ],
 
     "columns": {
+        "exception_type": ["Exception Type"],
 
         "company": ["Company Code"],
 
@@ -97,15 +56,11 @@ def meta():
 
 
 def get_data(exc_id):
-
-    path = rf"D:\off\JKC Dashboard\output\CJSA23_Exception{int(exc_id):02}.csv"
-
-    if not os.path.exists(path):
-
-        return None
-
-    return pd.read_csv(
-        path,
-        encoding='latin1',
-        low_memory=False
-    ).fillna('')
+    paths = [
+        rf"data_files/CJSA23_Exception{int(exc_id):02}.csv",
+        rf"data_files/CJSA23_Exception{int(exc_id)}.csv"
+    ]
+    path = next((p for p in paths if os.path.exists(p)), None)
+    if path:
+        return pd.read_csv(path, encoding='latin1', low_memory=False).fillna('')
+    return None

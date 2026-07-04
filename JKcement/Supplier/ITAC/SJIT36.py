@@ -7,6 +7,7 @@ import pandas as pd
 import os
 
 from ..procurement.template import get_chart_title, get_exception_title
+from .template import get_exception_title
 
 
 CONFIG = {

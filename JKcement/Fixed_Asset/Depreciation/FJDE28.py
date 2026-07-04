@@ -1,6 +1,7 @@
 # Fixed_Asset/Depreciation/FJDE28.py
 import pandas as pd
 import os
+from .template import get_exception_title
 
 CONFIG = {
     "id": "FJDE28",

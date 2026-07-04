@@ -38,8 +38,6 @@ CONFIG = {
             ],
 
             "filters": [
-                {"id": "f_extype", "label": "Exception Type", "source": "exception_type"},
-
                 {"id": "f1", "label": "Sales Organisation", "source": "sales_org"},
 
                 {"id": "f2", "label": "Pricing Procedure", "source": "pricing"},

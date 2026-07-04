@@ -91,6 +91,7 @@ def meta():
 def get_data(exc_id):
     insight_id = CONFIG["id"]
     import re
+    import pandas as pd
     m = re.search(r'([A-Za-z]+)(\d+)', insight_id)
     padded_id = f"{m.group(1)}0{m.group(2)}" if m and len(m.group(2)) == 1 else insight_id
     merged_df = pd.DataFrame()
@@ -106,7 +107,7 @@ def get_data(exc_id):
         if path:
             file_found = True
             df = pd.read_csv(path, encoding='latin1', low_memory=False).fillna('')
-            df['Exception Type'] = f"Exception {i}"
+            df['Exception Type'] = f"Exception {i:02}"
             merged_df = pd.concat([merged_df, df], ignore_index=True)
     if not file_found:
         return None

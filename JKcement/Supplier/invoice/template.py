@@ -140,6 +140,137 @@ def get_html():
         </div>
     </div>
 <script>
+        const EXC_NAMES = {
+    'CJIT3': {
+        'All Exceptions': 'Receivables exceeding minimum credit limit',
+        'Exception 01': 'Receivables exceeding minimum credit limit',
+        'Exception 1': 'Receivables exceeding minimum credit limit'
+    },
+    'CJIT03': {
+        'All Exceptions': 'Receivables exceeding minimum credit limit',
+        'Exception 01': 'Receivables exceeding minimum credit limit',
+        'Exception 1': 'Receivables exceeding minimum credit limit'
+    },
+    'CJMA11': {
+        'Exception 01': 'Payment term issues',
+        'Exception 1': 'Payment term issues'
+    },
+    'CJMA15': {
+        'Exception 01': 'Customer to Vendor balances are set off',
+        'Exception 1': 'Customer to Vendor balances are set off',
+        'Exception 02': 'Vendor to Customer balances are set off',
+        'Exception 2': 'Vendor to Customer balances are set off'
+    },
+    'CJSA24': {
+        'Exception 01': 'Delay between LR Date and Invoice Date (more than 7 days)',
+        'Exception 1': 'Delay between LR Date and Invoice Date (more than 7 days)',
+        'Exception 02': 'Delay between LR Date and Invoice Date (negative days)',
+        'Exception 2': 'Delay between LR Date and Invoice Date (negative days)'
+    },
+    'CJSA30': {
+        'All Exceptions': 'Scrap price is lower than the price at other location',
+        'Exception 01': 'Scrap price is lower than the price at other location',
+        'Exception 1': 'Scrap price is lower than the price at other location'
+    },
+    'FJAC6': {
+        'Exception 01': 'Missing Date Invoicing',
+        'Exception 1': 'Missing Date Invoicing',
+        'Exception 02': 'Backdated Invoicing',
+        'Exception 2': 'Backdated Invoicing'
+    },
+    'MJIT4': {
+        'All Exceptions': 'Message Configuration check for Validity period',
+        'Exception 01': 'Message Configuration check for Validity period',
+        'Exception 1': 'Message Configuration check for Validity period'
+    },
+    'MJOT11': {
+        'All Exceptions': 'Same plant with Scrap Sales',
+        'Exception 01': 'Same plant with Scrap Sales',
+        'Exception 1': 'Same plant with Scrap Sales',
+        'Exception 02': 'Across all plants with Scrap Sales',
+        'Exception 2': 'Across all plants with Scrap Sales'
+    },
+    'SJIN37': {
+        'Exception 01': 'Vendors with same PAN having same reference number / doc date',
+        'Exception 1': 'Vendors with same PAN having same reference number / doc date',
+        'Exception 02': 'Vendors with same PAN having same reference number / doc date / amount',
+        'Exception 2': 'Vendors with same PAN having same reference number / doc date / amount',
+        'Exception 03': 'Vendors with same PAN having same reference number / amount',
+        'Exception 3': 'Vendors with same PAN having same reference number / amount',
+        'Exception 04': 'Vendors with same PAN having same amount / doc date',
+        'Exception 4': 'Vendors with same PAN having same amount / doc date',
+        'Exception 05': 'Vendor Reference Document Date',
+        'Exception 5': 'Vendor Reference Document Date',
+        'Exception 06': 'Vendor Reference Document Date & Amount in LC',
+        'Exception 6': 'Vendor Reference Document Date & Amount in LC',
+        'Exception 07': 'Vendor Reference Amount in LC',
+        'Exception 7': 'Vendor Reference Amount in LC',
+        'Exception 08': 'Vendor Document Date & Amount in LC',
+        'Exception 8': 'Vendor Document Date & Amount in LC'
+    },
+    'SJIT31': {
+        'Exception 01': 'GR & IR configurations over Item Category Type configured inappropriately',
+        'Exception 1': 'GR & IR configurations over Item Category Type configured inappropriately',
+        'Exception 02': 'GR & IR configurations over Account Assignment Categories configured inappropriately',
+        'Exception 2': 'GR & IR configurations over Account Assignment Categories configured inappropriately',
+        'Exception 03': 'Purchase docs under exception with no GR check in PO',
+        'Exception 3': 'Purchase docs under exception with no GR check in PO'
+    },
+    'SJPR1': {
+        'Exception 01': 'PR to PO delay is more than 30 days',
+        'Exception 1': 'PR to PO delay is more than 30 days',
+        'Exception 02': 'PR to PO delay is negative',
+        'Exception 2': 'PR to PO delay is negative'
+    },
+    'SJPR25': {
+        'Exception 01': 'Invoice Creator and PO Creator are same',
+        'Exception 1': 'Invoice Creator and PO Creator are same',
+        'Exception 02': 'Entry Date before PO Date or equal to Invoice Date',
+        'Exception 2': 'Entry Date before PO Date or equal to Invoice Date',
+        'Exception 03': 'Posting Date before PO Date or equal to Invoice Date',
+        'Exception 3': 'Posting Date before PO Date or equal to Invoice Date'
+    },
+    'SJPR28': {
+        'Exception 01': 'Group accounts with PO & Non PO Invoices raised',
+        'Exception 1': 'Group accounts with PO & Non PO Invoices raised',
+        'Exception 02': 'Same Group account with PO & Non PO Invoices',
+        'Exception 2': 'Same Group account with PO & Non PO Invoices',
+        'Exception 03': 'GL & Group accounts with PO & Non PO Invoices raised',
+        'Exception 3': 'GL & Group accounts with PO & Non PO Invoices raised'
+    },
+    'SJPR53': {
+        'Exception 01': 'GL accounts with PO & Non PO Invoices raised',
+        'Exception 1': 'GL accounts with PO & Non PO Invoices raised',
+        'Exception 02': 'Same GL with PO & Non PO Invoices',
+        'Exception 2': 'Same GL with PO & Non PO Invoices'
+    },
+    'SJPR5': {
+        'Exception 01': 'Single Source Vendor - Plant level',
+        'Exception 1': 'Single Source Vendor - Plant level',
+        'Exception 02': 'Single Source Vendor - Company level',
+        'Exception 2': 'Single Source Vendor - Company level'
+    },
+    'SJPR9': {
+        'Exception 01': 'PR split within 10 days',
+        'Exception 1': 'PR split within 10 days',
+        'Exception 02': 'PR split within 30 days',
+        'Exception 2': 'PR split within 30 days'
+    }
+};
+        const MERGED_INSIGHTS = ['CJIT3', 'CJIT03', 'CJMA15', 'CJSA24', 'FJAC6', 'MJOT11', 'SJPR1', 'SJPR53', 'SJPR5', 'SJPR9', 'SJPR28', 'SJIT31', 'CJMA11', 'CJSA30', 'MJIT4', 'SJPR25', 'SJIN37'];
+        
+        function handleMergedInsightsUI(id) {
+            if (MERGED_INSIGHTS.includes(id)) {
+                $('#exc-btns').hide();
+                if (!curExcFilters.some(f => f.source === 'exception_type')) {
+                    curExcFilters.unshift({ id: 'sel-extype', label: 'Exception Type', source: 'exception_type', all_label: 'All Exceptions' });
+                }
+            } else {
+                $('#exc-btns').show();
+                curExcFilters = curExcFilters.filter(f => f.source !== 'exception_type');
+            }
+        }
+
         const defaultCards = [
             { id: 'k-comp', label: 'Companies', agg: 'unique', source: 'company' },
             { id: 'k-vend', label: 'Vendors', agg: 'unique', source: 'vendor' },
@@ -178,7 +309,12 @@ function renderChartJS(cfg,labels,values){const ctx=document.getElementById(cfg.
 async function load(){if(!curID)return;colCache={};$('#table-container').html('<div class="no-data-msg">Fetching data...</div>');try{const r=await fetch(`./api/${curID}/${curExc}?t=${Date.now()}`);const d=await r.json();if(d.success){rawD=d.rows||[];rawC=d.cols||[];bStats=d.full_stats||null;setupSlider();popSlicers();applyFilters();}else{handleEmptyState(d.msg);}}catch(e){console.error(e);handleEmptyState("Server Error");}}
 function handleEmptyState(msg="No data available for this Exception"){rawD=[];rawC=[];filteredD=[];updateKPIs();updateCharts();renderTable(msg);}
 function setupSlider(){const dc=rCol('date');if(!dc){$('#lbl-min').text('-');$('#lbl-max').text('-');$('#slider-track').css({width:'0%'});return;}dateList=[...new Set(rawD.map(r=>r[dc]))].filter(x=>x&&!isNaN(new Date(x))).sort((a,b)=>new Date(a)-new Date(b));if(dateList.length>0){$('#rng-min').attr({min:0,max:dateList.length-1}).val(0);$('#rng-max').attr({min:0,max:dateList.length-1}).val(dateList.length-1);updSliderUI();}else{$('#lbl-min').text('-');$('#lbl-max').text('-');$('#slider-track').css({width:'0%'});}}
-function popSlicers(){(curExcFilters||[]).forEach(f=>{const col=rCol(f.source),sel=$('#'+f.id);sel.html(`<option value="ALL">${f.all_label}</option>`);if(col&&rawD.length>0){[...new Set(rawD.map(r=>r[col]))].filter(x=>x).sort().forEach(v=>sel.append(`<option value="${v}">${v}</option>`));}});}
+function popSlicers(){(curExcFilters||[]).forEach(f=>{const col=rCol(f.source),sel=$('#'+f.id);let allLbl = f.all_label || ('All ' + f.label);
+                if (allLbl.toLowerCase() === 'all exception type' || allLbl.toLowerCase() === 'all exception types') {
+                    allLbl = 'All Exceptions';
+                }
+                allLbl = allLbl.replace(/"/g, '');
+                sel.html('<option value="ALL">' + allLbl + '</option>');if (f.id === 'sel-extype') { (aCfg.active_exceptions || []).forEach(e => { const label = e.label; const mappedName = (typeof EXC_NAMES !== 'undefined' && EXC_NAMES[curID] && EXC_NAMES[curID][label]) || label; sel.append('<option value="' + label + '">' + mappedName + '</option>'); }); }else if(col&&rawD.length>0){[...new Set(rawD.map(r=>r[col]))].filter(x=>x).sort().forEach(v=>sel.append(`<option value="${v}">${v}</option>`));}});}
 function renderTable(msg){if(!filteredD.length){$('#table-container').html(`<div class="no-data-msg" style="position:relative;min-height:200px;background:transparent;"><i class="fa-solid fa-circle-info empty-state-icon"></i><div class="empty-state-title">${msg||"No data available for this Exception"}</div></div>`);return;}let h='<table><thead><tr>';rawC.forEach(c=>h+=`<th>${c}</th>`);h+='</tr></thead><tbody>';filteredD.slice(0,100).forEach(r=>{h+='<tr>';rawC.forEach(c=>h+=`<td>${r[c]!==null&&r[c]!==undefined?r[c]:''}</td>`);h+='</tr>';});h+='</tbody></table>';$('#table-container').html(h);}
 function selObj(id, name, el) {
     if (history.pushState) history.pushState(null, "", "?oid=" + id);
@@ -191,7 +327,7 @@ function selObj(id, name, el) {
     curExcFilters = eObj.filters || aCfg.filters || defaultFilters;
     curExcCards = eObj.cards || aCfg.cards || defaultCards;
     curExcCharts = eObj.charts || aCfg.charts || defaultCharts;
-    buildKPIs(curExcCards); 
+    handleMergedInsightsUI(id); buildKPIs(curExcCards); 
     buildSlicers(curExcFilters); 
     buildChartBoxes(curExcCharts);
     load();
@@ -206,7 +342,7 @@ function selExc(ex) {
         curExcFilters = eObj.filters || aCfg.filters || defaultFilters;
         curExcCards = eObj.cards || aCfg.cards || defaultCards;
         curExcCharts = eObj.charts || aCfg.charts || defaultCharts;
-        buildKPIs(curExcCards); 
+        handleMergedInsightsUI(curID); buildKPIs(curExcCards); 
         buildSlicers(curExcFilters); 
         buildChartBoxes(curExcCharts);
     }

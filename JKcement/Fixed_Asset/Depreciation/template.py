@@ -163,7 +163,12 @@ function renderChartJS(cfg,labels,values){const ctx=document.getElementById(cfg.
 async function load(){if(!curID)return;colCache={};$('#table-container').html('<div class="no-data-msg">Fetching data...</div>');try{const r=await fetch(`./api/${curID}/${curExc}?t=${Date.now()}`);const d=await r.json();if(d.success){rawD=d.rows||[];rawC=d.cols||[];bStats=d.full_stats||null;setupSlider();popSlicers();applyFilters();}else{handleEmptyState(d.msg);}}catch(e){console.error(e);handleEmptyState("Server Error");}}
 function handleEmptyState(msg="No data available for this Exception"){rawD=[];rawC=[];filteredD=[];updateKPIs();updateCharts();renderTable(msg);}
 function setupSlider(){const dc=rCol('date');if(!dc){$('#lbl-min').text('-');$('#lbl-max').text('-');$('#slider-track').css({width:'0%'});return;}dateList=[...new Set(rawD.map(r=>r[dc]))].filter(x=>x&&!isNaN(new Date(x))).sort((a,b)=>new Date(a)-new Date(b));if(dateList.length>0){$('#rng-min').attr({min:0,max:dateList.length-1}).val(0);$('#rng-max').attr({min:0,max:dateList.length-1}).val(dateList.length-1);updSliderUI();}else{$('#lbl-min').text('-');$('#lbl-max').text('-');$('#slider-track').css({width:'0%'});}}
-function popSlicers(){(curExcFilters||[]).forEach(f=>{const col=rCol(f.source),sel=$('#'+f.id);sel.html(`<option value="ALL">${f.all_label}</option>`);if(col&&rawD.length>0){[...new Set(rawD.map(r=>r[col]))].filter(x=>x).sort().forEach(v=>sel.append(`<option value="${v}">${v}</option>`));}});}
+function popSlicers(){(curExcFilters||[]).forEach(f=>{const col=rCol(f.source),sel=$('#'+f.id);let allLbl = f.all_label || ('All ' + f.label);
+                if (allLbl.toLowerCase() === 'all exception type' || allLbl.toLowerCase() === 'all exception types') {
+                    allLbl = 'All Exceptions';
+                }
+                allLbl = allLbl.replace(/"/g, '');
+                sel.html('<option value="ALL">' + allLbl + '</option>');if(col&&rawD.length>0){[...new Set(rawD.map(r=>r[col]))].filter(x=>x).sort().forEach(v=>sel.append(`<option value="${v}">${v}</option>`));}});}
 function renderTable(msg){if(!filteredD.length){$('#table-container').html(`<div class="no-data-msg" style="position:relative;min-height:200px;background:transparent;"><i class="fa-solid fa-circle-info empty-state-icon"></i><div class="empty-state-title">${msg||"No data available for this Exception"}</div></div>`);return;}let h='<table><thead><tr>';rawC.forEach(c=>h+=`<th>${c}</th>`);h+='</tr></thead><tbody>';filteredD.slice(0,100).forEach(r=>{h+='<tr>';rawC.forEach(c=>h+=`<td>${r[c]!==null&&r[c]!==undefined?r[c]:''}</td>`);h+='</tr>';});h+='</tbody></table>';$('#table-container').html(h);}
 function selObj(id, name, el) {
     if (history.pushState) history.pushState(null, "", "?oid=" + id);
